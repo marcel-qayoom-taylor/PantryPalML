@@ -1,0 +1,55 @@
+# Pre-commit hooks configuration for PantryPalUtils
+# Local-only configuration using uv to avoid pip configuration issues
+# Run: pre-commit install (first time setup)
+# Run: pre-commit run --all-files (manual run on all files)
+
+repos:
+  # Local hooks using installed packages
+  - repo: local
+    hooks:
+      # Ruff linter
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check
+        args: [--fix, --exit-non-zero-on-fix]
+        language: system
+        types: [python]
+
+      # Ruff formatter
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [python]
+
+      # Vulture for dead code detection
+      - id: vulture
+        name: vulture
+        entry: uv run vulture
+        language: system
+        types: [python]
+        # Configuration is now in pyproject.toml
+
+      # Bandit for security scanning
+      - id: bandit
+        name: bandit security check
+        entry: uv run bandit
+        args: [-c, pyproject.toml, -r]
+        language: system
+        types: [python]
+        # Skip reference analysis files
+        exclude: ^ml_etl/analysis/
+
+      # Basic file checks
+      - id: trailing-whitespace
+        name: trim trailing whitespace
+        entry: uv run python -c "import sys; [print(f.rstrip()) for f in sys.stdin]"
+        language: system
+        types: [text]
+
+      # Check Python syntax
+      - id: check-ast
+        name: check python ast
+        entry: uv run python -m py_compile
+        language: system
+        types: [python]

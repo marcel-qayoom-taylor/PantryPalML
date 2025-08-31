@@ -1,0 +1,170 @@
+# Supabase Integration for Recipe Recommendation System
+
+This module integrates your Supabase database to access the complete recipe catalog, enabling content-based and hybrid recommendations.
+
+## 🔧 Setup Instructions
+
+### 1. Install Dependencies
+```bash
+uv add supabase python-dotenv
+```
+
+### 2. Configure Supabase Access
+
+Create a `.env` file in the project root with your Supabase credentials:
+
+```bash
+# .env file
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+```
+
+**To get these values:**
+1. Go to your Supabase project dashboard
+2. Navigate to **Settings** → **API**
+3. Copy:
+   - **Project URL** → `SUPABASE_URL`
+   - **anon/public key** → `SUPABASE_ANON_KEY` 
+   - **service_role key** → `SUPABASE_SERVICE_ROLE_KEY`
+
+### 3. Test Connection
+
+```bash
+cd ml_etl/database
+python supabase_config.py
+```
+
+You should see: `✅ Supabase connection successful!`
+
+## 📊 Expected Database Schema
+
+The system expects these tables in your Supabase database:
+
+### `recipes` table
+- `id` (int/uuid) - Primary key
+- `name` (text) - Recipe name
+- `author` (text) - Recipe author/source
+- `cooking_time_minutes` (int) - Total cooking time
+- `servings` (int) - Number of servings
+- `created_at` (timestamp)
+- `updated_at` (timestamp)
+- Additional recipe metadata...
+
+### `ingredients` table  
+- `id` (int/uuid) - Primary key
+- `name` (text) - Ingredient name
+- `category` (text) - Ingredient category (optional)
+
+### `recipe_ingredients` table
+- `recipe_id` (foreign key to recipes.id)
+- `ingredient_id` (foreign key to ingredients.id)
+- `quantity` (text) - Optional quantity
+- `unit` (text) - Optional unit
+
+### `tags` table
+- `id` (int/uuid) - Primary key  
+- `name` (text) - Tag name
+- `category` (text) - Tag category (optional)
+
+### `recipe_tags` table
+- `recipe_id` (foreign key to recipes.id)
+- `tag_id` (foreign key to tags.id)
+
+## 🚀 Usage
+
+### Fetch Recipe Data
+```python
+from recipe_recommender.etl.database.fetch_real_recipes import RealRecipeDataFetcher
+
+# Initialize fetcher (uses centralized config)
+fetcher = RealRecipeDataFetcher(use_service_role=True)
+
+# Fetch all recipe data
+dataset = fetcher.build_comprehensive_recipe_dataset()
+
+# Access individual DataFrames
+recipes = dataset['enhanced_recipes']
+ingredients = dataset['recipe_ingredients'] 
+raw_ingredients = dataset['ingredients']
+```
+
+### Integration with ML Pipeline
+```python
+# The fetched data automatically integrates with the ML pipeline
+from recipe_recommender.models.hybrid_recommendation_data_builder import HybridRecommendationDataBuilder
+
+builder = HybridRecommendationDataBuilder()
+train_data, val_data, test_data = builder.prepare_training_data()
+```
+
+## 🎯 Benefits Over Event-Only Data
+
+### **Current System (Event-Only)**
+- Limited to ~1,300 recipes with interactions
+- No content-based recommendations
+- Cold start problem for new recipes
+- Basic recipe features only
+
+### **Enhanced System (Full Catalog)**
+- Access to entire recipe database
+- **Content-based filtering** via ingredients & tags
+- **Hybrid recommendations** (collaborative + content)
+- Rich feature engineering:
+  - Ingredient similarity matrices
+  - Cuisine/diet preferences  
+  - Cooking method preferences
+  - Nutritional categories
+  - Complexity scoring
+
+### **Key Feature Enhancements**
+
+**Ingredient Features:**
+- Ingredient similarity (TF-IDF + cosine similarity)
+- Ingredient categories (protein, dairy, vegetables)
+- Recipe complexity based on ingredient count/diversity
+
+**Tag/Category Features:**
+- Dietary restrictions (vegetarian, vegan, gluten-free)
+- Cuisine types (Italian, Mexican, Asian, etc.)
+- Meal types (breakfast, lunch, dinner, dessert)
+- Cooking methods (slow cooker, air fryer, instant pot)
+
+**Content Similarity:**
+- Recipe-to-recipe similarity based on ingredients
+- User preference matching based on ingredient preferences
+- Seasonal/contextual recommendations
+
+## 🔧 Troubleshooting
+
+### Connection Issues
+```python
+# Test connection
+from recipe_recommender.etl.database.supabase_config import SupabaseConfig
+config = SupabaseConfig()
+config.test_connection()
+```
+
+### Schema Issues
+Make sure your database schema matches the expected structure. The system will show specific error messages for missing tables or columns.
+
+### Performance
+- For large datasets, consider using `limit` parameter initially
+- The service role key provides full access but use carefully in production
+- Consider adding database indexes on frequently queried columns
+
+## 🧪 Testing
+
+```bash
+# Test Supabase connection
+python ml_etl/database/supabase_config.py
+
+# Fetch latest recipe data
+python ml_etl/database/fetch_real_recipes.py
+```
+
+This will create several output files in `ml_etl/output/`:
+- `real_*_from_db.csv` - Raw data from Supabase  
+- `enhanced_recipe_features_from_db.csv` - Comprehensive recipe features
+- `real_database_summary.txt` - Database summary and statistics
+- Various metadata files for the ML pipeline
