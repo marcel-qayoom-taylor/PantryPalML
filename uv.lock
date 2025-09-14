@@ -593,7 +593,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pantry-pal-utils"
+name = "pantry-pal-ml"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

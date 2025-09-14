@@ -2,6 +2,38 @@
 
 A production-ready hybrid gradient boosted model (GBM) that combines user interaction history with rich recipe content features to provide personalized recipe recommendations.
 
+## ☁️ Cloud-Executable Demo (A2/A3 Submission)
+
+Run the full pipeline in the cloud with one click. No local setup required.
+
+[![Open In Colab](https://colab.research.googleusercontent.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Colab_Demo.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Colab_Demo.ipynb)
+
+### What the Demo Shows
+- End-to-end run: data loading → feature engineering (reference) → model training → evaluation → sample recommendations
+- Self-contained environment setup (installs dependencies in the notebook)
+- Uses repo-included sample outputs to avoid external DB access
+
+### Task I/O (for A2 criteria)
+- Training input: CSV files with user–recipe pairs and engineered features (`recipe_recommender/output/hybrid_*_data.csv`)
+- Training output: Trained LightGBM model + metadata (`recipe_recommender/output/hybrid_models/`)
+- Inference input: `user_id` and a list of interaction events (recipe_id, event_type, timestamp)
+- Inference output: Ranked list of recipes with scores and key metadata
+
+### How to Run (Colab)
+1. Click the Colab badge above
+2. Runtime → Run all (installs dependencies, clones repo, runs training/eval, shows recommendations)
+3. Optional: Edit the sample `user_interactions` cell to see different recommendations
+
+### How to Run (Binder/Jupyter)
+1. Click the Binder badge above
+2. Open `notebooks/A2_Colab_Demo.ipynb`
+3. Kernel → Restart & Run All
+
+Notes:
+- The demo avoids live Supabase calls and relies on small sample CSVs checked into the repo for fast, consistent execution.
+- For full data refresh and DB-backed runs, use the production scripts in the sections below.
+
 ## 🎯 What This System Does
 
 **Input:** User's recipe interaction history (viewed, cooked, favourited, etc.)  
