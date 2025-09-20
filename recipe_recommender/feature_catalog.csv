@@ -1,0 +1,37 @@
+feature,description,entity,raw_or_computed
+total_interactions,Total user recipe interactions,user,computed
+avg_rating,"Average engagement score per interaction event (Viewed=1.0, Clicked=2.0, Cook Started=3.0, Favourited=4.0, Cooked=5.0)",user,computed
+total_rating,Sum of interaction weights,user,computed
+rating_std,Std dev of interaction weights,user,computed
+unique_recipes,Distinct recipes interacted with,user,computed
+first_interaction,Timestamp of first interaction,user,computed
+last_interaction,Timestamp of latest interaction,user,computed
+primary_device,Most common device type,user,computed
+primary_platform,Most common OS/platform,user,computed
+activity_days,Days active between first and last interaction,user,computed
+interactions_per_day,Average interactions per active day,user,computed
+engagement_score,Interaction intensity per day,user,computed
+recipe_name,Recipe title,recipe,raw
+recipe_img,Recipe image URL,recipe,raw
+prep_time,Prep time (minutes),recipe,raw
+cook_time,Cook time (minutes),recipe,raw
+total_time,Total time (minutes),recipe,computed
+servings,Number of servings,recipe,raw
+author_name,Recipe author name,recipe,raw
+author_id,Recipe author identifier,recipe,raw
+tags,Recipe tags,recipe,raw
+recipe_url,Recipe URL,recipe,raw
+description,Recipe description text,recipe,raw
+instruction,Cooking instructions text,recipe,raw
+note,Additional notes,recipe,raw
+created_at,Recipe created timestamp,recipe,raw
+updated_at,Recipe last updated timestamp,recipe,raw
+ingredient_count,Count of ingredients,recipe,computed
+unique_ingredients,Unique ingredient count,recipe,computed
+complexity_score,Recipe complexity score,recipe,computed
+ingredient_count_db,Ingredient count from relationship table,recipe,computed
+user_complexity_match,User preference × recipe complexity,user,computed
+user_recipe_engagement_match,Engagement ÷ (ingredient count + 1),user,computed
+user_time_compatibility,Interactions/day ÷ (total time + 1),user,computed
+is_mobile_user,1 if primary device is phone else 0,user,computed
+is_ios_user,1 if primary platform is iOS else 0,user,computed
