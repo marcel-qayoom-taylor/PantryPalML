@@ -15,6 +15,7 @@ from .common import (
     save_json_file,
     setup_logging,
     validate_dataframe,
+    configure_logging,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "save_json_file",
     "setup_logging",
     "validate_dataframe",
+    "configure_logging",
 ]

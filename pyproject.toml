@@ -57,7 +57,7 @@ select = [
 ]
 
 ignore = [
-    "E501",    # Line too long (we use line-length = 88)
+    "E501",    # Line too long (I use line-length = 88)
     "S101",    # Use of assert (common in data science)
     "PD901",   # df is a common variable name in pandas code
     "PLR0913", # Too many arguments (common in ML models)

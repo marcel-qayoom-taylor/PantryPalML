@@ -19,7 +19,7 @@ def setup_logging(name: str, level: int = logging.INFO) -> logging.Logger:
     """
     Set up consistent logging across all modules.
 
-    For beginners: This replaces print statements with proper logging
+    This replaces print statements with proper logging
     that can be controlled, filtered, and saved to files.
 
     Args:
@@ -41,6 +41,32 @@ def setup_logging(name: str, level: int = logging.INFO) -> logging.Logger:
         logger.setLevel(level)
 
     return logger
+
+
+def configure_logging(level: int = logging.INFO) -> None:
+    """
+    Configure the root logger once with a consistent formatter and level.
+
+    Use this in CLI entrypoints to control verbosity; library code should
+    only call setup_logging(__name__).
+
+    Args:
+        level: Logging level for root (e.g., logging.INFO or logging.DEBUG)
+    """
+    root_logger = logging.getLogger()
+    if root_logger.handlers:
+        root_logger.setLevel(level)
+        for handler in root_logger.handlers:
+            handler.setLevel(level)
+        return
+
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    handler.setFormatter(formatter)
+    root_logger.addHandler(handler)
+    root_logger.setLevel(level)
 
 
 def load_json_file(file_path: Path) -> dict[str, Any] | None:
@@ -88,7 +114,7 @@ def safe_load_csv(file_path: Path, **kwargs) -> pd.DataFrame | None:
     """
     Safely load a CSV file with error handling.
 
-    For beginners: This function loads CSV files and handles common
+    This function loads CSV files and handles common
     errors like missing files or bad data gracefully.
 
     Args:
@@ -147,7 +173,7 @@ def validate_dataframe(
     """
     Validate that a DataFrame has the required structure.
 
-    For beginners: This checks that your data has all the columns
+    This checks that your data has all the columns
     you expect before trying to use it in ML.
 
     Args:
@@ -170,7 +196,7 @@ def validate_dataframe(
         return False
 
     logger.info(
-        f"✅ {name} validation passed: {len(df):,} rows, {len(df.columns)} columns"
+        f"{name} validation passed: {len(df):,} rows, {len(df.columns)} columns"
     )
     return True
 
@@ -203,7 +229,7 @@ def calculate_positive_ratio(df: pd.DataFrame, label_column: str = "label") -> f
     """
     Calculate the ratio of positive samples in a dataset.
 
-    For beginners: This tells you how balanced your dataset is.
+    This tells you how balanced your dataset is.
     If the ratio is very low (like 0.01), most samples are negative.
 
     Args:
@@ -224,7 +250,7 @@ def print_dataset_summary(df: pd.DataFrame, name: str = "Dataset") -> None:
     """
     Print a summary of a dataset for debugging.
 
-    For beginners: This gives you a quick overview of your data
+    This gives you a quick overview of your data
     to spot potential issues.
 
     Args:
@@ -233,7 +259,7 @@ def print_dataset_summary(df: pd.DataFrame, name: str = "Dataset") -> None:
     """
     logger = logging.getLogger(__name__)
 
-    logger.info(f"\n📊 {name.upper()} SUMMARY:")
+    logger.info(f"{name} summary:")
     logger.info(f"   Shape: {df.shape}")
     logger.info(f"   Memory usage: {df.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
 
@@ -246,7 +272,7 @@ def print_dataset_summary(df: pd.DataFrame, name: str = "Dataset") -> None:
     if missing.sum() > 0:
         logger.info(f"   Missing values: {missing[missing > 0].to_dict()}")
     else:
-        logger.info("   ✅ No missing values")
+        logger.info("   No missing values")
 
     # If there's a label column, show class distribution
     if "label" in df.columns:

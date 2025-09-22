@@ -8,7 +8,7 @@ file and formats it for use with the production recipe scorer.
 
 import pandas as pd
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict
 import argparse
 import json
 
@@ -22,7 +22,7 @@ class UserInteractionFetcher:
     """
     Fetches user interaction history from cleaned Mixpanel data.
 
-    For beginners: This class reads the combined events CSV file and extracts
+    This class reads the combined events CSV file and extracts
     all recipe-related interactions for a specific user.
     """
 
@@ -43,7 +43,7 @@ class UserInteractionFetcher:
             "Recipe Search Queried",
         }
 
-        logger.info(f"🔍 Initialized UserInteractionFetcher")
+        logger.info("Initialized UserInteractionFetcher")
         logger.info(f"   Events file: {self.events_file}")
         logger.info(f"   Tracking {len(self.recipe_events)} event types")
 
@@ -60,7 +60,7 @@ class UserInteractionFetcher:
         Returns:
             List of interaction dictionaries formatted for the recommendation model
         """
-        logger.info(f"🎯 Fetching interactions for user: {user_id}")
+        logger.info(f"Fetching interactions for user: {user_id}")
 
         if not self.events_file.exists():
             raise FileNotFoundError(f"Events file not found: {self.events_file}")
@@ -71,7 +71,7 @@ class UserInteractionFetcher:
         total_rows = 0
         matching_rows = 0
 
-        logger.info("📖 Reading events file in chunks...")
+        logger.info("Reading events file in chunks")
 
         try:
             for chunk in pd.read_csv(self.events_file, chunksize=chunk_size):
@@ -109,16 +109,14 @@ class UserInteractionFetcher:
                         f"   Processed {total_rows:,} rows, found {matching_rows} matches..."
                     )
 
-        except Exception as e:
-            logger.error(f"❌ Error reading events file: {e}")
+        except Exception:
+            logger.exception("Error reading events file")
             raise
 
         # Sort by timestamp
         interactions.sort(key=lambda x: x["timestamp"])
 
-        logger.info(
-            f"✅ Found {len(interactions)} recipe interactions for user {user_id}"
-        )
+        logger.info(f"Found {len(interactions)} recipe interactions for user {user_id}")
         logger.info(f"   Processed {total_rows:,} total events")
         logger.info(f"   Time range: {self._format_timestamp_range(interactions)}")
         logger.info(f"   Event breakdown: {self._get_event_breakdown(interactions)}")
@@ -129,8 +127,8 @@ class UserInteractionFetcher:
         """
         Extract recipe ID from the event data.
 
-        For beginners: Recipe IDs might be embedded in routes like /recipes/[id]
-        or we might need to use other methods to identify which recipe was interacted with.
+        Recipe IDs might be embedded in routes like /recipes/[id]
+        or I might need to use other methods to identify which recipe was interacted with.
         """
         # Try to extract from current_route
         if "current_route" in row and pd.notna(row["current_route"]):
@@ -180,7 +178,7 @@ class UserInteractionFetcher:
         Returns:
             Dictionary with user activity summary
         """
-        logger.info(f"📊 Getting activity summary for user: {user_id}")
+        logger.info(f"Getting activity summary for user: {user_id}")
 
         if not self.events_file.exists():
             raise FileNotFoundError(f"Events file not found: {self.events_file}")
@@ -220,8 +218,8 @@ class UserInteractionFetcher:
                     # Collect timestamps
                     timestamps.extend(user_events["timestamp"].tolist())
 
-        except Exception as e:
-            logger.error(f"❌ Error reading events file: {e}")
+        except Exception:
+            logger.exception("Error reading events file")
             raise
 
         # Calculate time-based metrics
@@ -234,7 +232,7 @@ class UserInteractionFetcher:
             )
 
         logger.info(
-            f"✅ User summary: {summary['total_events']} total events, {summary['recipe_events']} recipe events"
+            f"User summary: {summary['total_events']} total events, {summary['recipe_events']} recipe events"
         )
 
         return summary
@@ -258,8 +256,7 @@ def main():
 
     args = parser.parse_args()
 
-    logger.info("🚀 USER INTERACTION FETCHER")
-    logger.info("=" * 50)
+    logger.info("User Interaction Fetcher")
 
     try:
         fetcher = UserInteractionFetcher()
@@ -268,7 +265,7 @@ def main():
             # Get summary only
             summary = fetcher.get_user_summary(args.user_id)
 
-            print("\n📊 USER ACTIVITY SUMMARY:")
+            print("\nUSER ACTIVITY SUMMARY:")
             print(f"   User ID: {summary['user_id']}")
             print(f"   Total Events: {summary['total_events']:,}")
             print(f"   Recipe Events: {summary['recipe_events']:,}")
@@ -282,7 +279,7 @@ def main():
                 print(f"   First Seen: {first.strftime('%Y-%m-%d %H:%M:%S')}")
                 print(f"   Last Seen: {last.strftime('%Y-%m-%d %H:%M:%S')}")
 
-            print("\n📈 EVENT BREAKDOWN:")
+            print("\nEVENT BREAKDOWN:")
             for event_type, count in sorted(
                 summary["event_types"].items(), key=lambda x: x[1], reverse=True
             ):
@@ -299,12 +296,10 @@ def main():
                 output_path = Path(args.output)
                 with open(output_path, "w") as f:
                     json.dump(interactions, f, indent=2)
-                logger.info(
-                    f"💾 Saved {len(interactions)} interactions to {output_path}"
-                )
+                logger.info(f"Saved {len(interactions)} interactions to {output_path}")
             else:
                 # Print to console
-                print(f"\n🎯 INTERACTIONS FOR USER {args.user_id}:")
+                print(f"\nINTERACTIONS FOR USER {args.user_id}:")
                 print(f"Found {len(interactions)} recipe interactions\n")
 
                 for i, interaction in enumerate(interactions[:10], 1):  # Show first 10
@@ -321,13 +316,11 @@ def main():
                 if len(interactions) > 10:
                     print(f"   ... and {len(interactions) - 10} more interactions")
 
-                print("\n💡 To save to file, use: --output interactions.json")
-                print(
-                    "💡 To use with inference, pass this list to ProductionRecipeScorer"
-                )
+                print("\nTo save to file, use: --output interactions.json")
+                print("To use with inference, pass this list to ProductionRecipeScorer")
 
-    except Exception as e:
-        logger.error(f"❌ Error: {e}")
+    except Exception:
+        logger.exception("Error fetching user interactions")
         return 1
 
     return 0

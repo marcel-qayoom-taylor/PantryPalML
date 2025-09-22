@@ -96,7 +96,7 @@ def main():
     )  # Go up two levels: events -> etl -> recipe_recommender
 
     v1_file = ml_etl_dir / "input" / "v1_events_20250827.json"
-    v2_file = ml_etl_dir / "input" / "v2_events_20250827.json"
+    v2_file = ml_etl_dir / "input" / "v2_events_20250920.json"
     output_file = ml_etl_dir / "output" / "combined_events.csv"
 
     print("Loading v1 events...")
@@ -144,7 +144,7 @@ def main():
     print(f"Combined CSV written to {output_file}")
 
     # Print summary stats
-    print("\n📊 Summary:")
+    print("\nSummary:")
     print(f"Total events: {len(combined_df):,}")
     print(f"V1 events: {len(v1_df):,}")
     print(f"V2 events: {len(v2_df):,}")

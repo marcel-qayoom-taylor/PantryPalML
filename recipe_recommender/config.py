@@ -11,6 +11,32 @@ from pathlib import Path
 
 
 @dataclass
+class TextEncodingConfig:
+    """Configuration for optional text feature encodings.
+
+    Turn these on to let text like recipe name or description
+    contribute numeric signals to the model. They are off by default.
+    """
+
+    enable_text_features: bool = False
+
+    # Encoders
+    author_id_encoding: str = "freq"  # one of: none|freq|target
+    tags_encoding: str = "topk_multi_hot"  # one of: none|topk_multi_hot|hashing
+    name_encoding: str = "hashing"  # one of: none|hashing
+    desc_encoding: str = "none"  # one of: none|tfidf|hashing
+    instr_encoding: str = "none"  # one of: none|tfidf|hashing
+
+    # Hyperparameters
+    tags_top_k: int = 50
+    name_hash_dim: int = 128
+    desc_max_features: int = 500
+    instr_hash_dim: int = 512
+    hashing_alternate_sign: bool = False
+    ngram_range: tuple[int, int] = (1, 2)
+
+
+@dataclass
 class MLConfig:
     """Configuration for the ML pipeline."""
 
@@ -19,6 +45,10 @@ class MLConfig:
     output_dir: Path
     input_dir: Path
     model_dir: Path
+
+    # Files
+    raw_recipe_features_filename: str = "enhanced_recipe_features_from_db.csv"
+    encoded_recipe_features_filename: str = "enhanced_recipe_features_encoded.csv"
 
     # Model settings
     random_state: int = 42
@@ -38,9 +68,12 @@ class MLConfig:
     min_child_samples: int = 20
     max_boost_rounds: int = 1000
     early_stopping_rounds: int = 50
+    # Ranking evaluation cutoffs (used by Lambdarank)
+    ndcg_eval_at: tuple[int, int, int] = (5, 10, 20)
 
     # Feature engineering
     interaction_weights: dict[str, float] = None
+    text_encoding: TextEncodingConfig | None = None
 
     def __post_init__(self):
         """Initialize default values and create directories."""
@@ -65,7 +98,7 @@ def get_ml_config() -> MLConfig:
     """
     Get the ML configuration with automatic path detection.
 
-    For beginners: This function finds the project root automatically
+    This function finds the project root automatically
     and sets up all the paths you need for the ML pipeline.
 
     Returns:
@@ -85,6 +118,7 @@ def get_ml_config() -> MLConfig:
         output_dir=recipe_recommender_dir / "output",
         input_dir=recipe_recommender_dir / "input",
         model_dir=recipe_recommender_dir / "output" / "hybrid_models",
+        text_encoding=TextEncodingConfig(),
     )
 
 
@@ -92,13 +126,14 @@ def get_feature_columns_to_exclude() -> list:
     """
     Get columns that should be excluded from ML training.
 
-    For beginners: These are text/string columns that contain information
+    These are text/string columns that contain information
     but aren't useful as numerical features for the ML model.
     """
     return [
         "recipe_name",
         "recipe_img",
         "author_name",
+        "author_id",
         "tags",
         "recipe_url",
         "description",

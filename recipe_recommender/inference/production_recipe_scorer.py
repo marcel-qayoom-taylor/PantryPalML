@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 
 import lightgbm as lgb
+import joblib
 import numpy as np
 import pandas as pd
 
@@ -26,7 +27,7 @@ class ProductionRecipeScorer:
     """
     Production API for scoring and ranking recipes for users.
 
-    For beginners: This class loads a trained ML model and uses it to
+    This class loads a trained ML model and uses it to
     score recipes for users based on their interaction history.
     """
 
@@ -50,7 +51,7 @@ class ProductionRecipeScorer:
         self.recipe_features: pd.DataFrame = pd.DataFrame()
         self.user_profiles: dict = {}  # Cache user profiles
 
-        logger.info("🎯 Initializing Production Recipe Scorer...")
+        logger.info("Initializing Production Recipe Scorer")
 
         # Load model and data
         self._load_model_components()
@@ -60,17 +61,17 @@ class ProductionRecipeScorer:
         """
         Load the trained model and metadata.
 
-        For beginners: This loads the previously trained LightGBM model
-        and its configuration so we can use it for predictions.
+        This loads the previously trained LightGBM model
+        and its configuration so I can use it for predictions.
         """
-        logger.info("🔧 Loading trained model components...")
+        logger.info("Loading trained model components...")
 
         try:
             # Load LightGBM model
             model_file = self.model_dir / f"hybrid_{self.config.model_type}_model.txt"
             if model_file.exists():
                 self.model = lgb.Booster(model_file=str(model_file))
-                logger.info(f"✅ Loaded {self.config.model_type.upper()} model")
+                logger.info(f"Loaded {self.config.model_type.upper()} model")
             else:
                 raise FileNotFoundError(f"Model file not found: {model_file}")
 
@@ -82,29 +83,36 @@ class ProductionRecipeScorer:
             if self.metadata:
                 self.feature_columns = self.metadata["feature_columns"]
                 logger.info(
-                    f"✅ Loaded model metadata with {len(self.feature_columns)} features"
+                    f"Loaded model metadata with {len(self.feature_columns)} features"
                 )
             else:
-                logger.warning(
-                    "⚠️  Metadata file not found, using default feature columns"
-                )
+                logger.warning("Metadata file not found, using default feature columns")
 
         except Exception as e:
-            logger.error(f"❌ Error loading model: {e}")
+            logger.exception("Error loading model")
             raise
 
     def _load_recipe_data(self) -> None:
         """
         Load recipe features for scoring.
 
-        For beginners: This loads all the recipe data so we can score
+        This loads all the recipe data so I can score
         any recipe for any user.
         """
         try:
-            recipe_file = (
-                self.config.output_dir / "enhanced_recipe_features_from_db.csv"
+            # Prefer encoded recipe features if present
+            encoded_path = (
+                self.config.output_dir / self.config.encoded_recipe_features_filename
             )
-            self.recipe_features = safe_load_csv(recipe_file)
+            raw_path = self.config.output_dir / self.config.raw_recipe_features_filename
+
+            encoded_exists = encoded_path.exists()
+            if encoded_exists:
+                self.recipe_features = safe_load_csv(encoded_path)
+                logger.info(f"Loaded encoded recipe features from {encoded_path.name}")
+            else:
+                self.recipe_features = safe_load_csv(raw_path)
+                logger.info(f"Loaded raw recipe features from {raw_path.name}")
 
             if self.recipe_features is None:
                 raise FileNotFoundError("Recipe features file not found")
@@ -112,17 +120,44 @@ class ProductionRecipeScorer:
             self.recipe_features["recipe_id"] = self.recipe_features[
                 "recipe_id"
             ].astype(str)
-            logger.info(f"✅ Loaded {len(self.recipe_features)} recipes for scoring")
+            logger.info(f"Loaded {len(self.recipe_features)} recipes for scoring")
+
+            # Validate presence of encoded features when required by model metadata
+            try:
+                training_meta = self.metadata.get("training_metadata", {})
+                text_enabled = bool(training_meta.get("text_features_enabled", False))
+                enc_cfg = (training_meta.get("text_encoders", {}) or {}).get(
+                    "config", {}
+                )
+                requires_prematerialized = (
+                    (enc_cfg.get("desc_encoding") == "tfidf")
+                    or (enc_cfg.get("instr_encoding") == "tfidf")
+                    or (enc_cfg.get("author_id_encoding") == "target")
+                    or (enc_cfg.get("tags_encoding") == "topk_multi_hot")
+                )
+                if text_enabled and requires_prematerialized and not encoded_exists:
+                    expected_file = training_meta.get(
+                        "encoded_recipe_features_file",
+                        str(encoded_path),
+                    )
+                    raise FileNotFoundError(
+                        "Encoded recipe features required by model are missing. "
+                        f"Expected: {expected_file}. Re-run training data builder "
+                        "with text features enabled or copy the encoded CSV to the output directory."
+                    )
+            except Exception as e:
+                # Surface clear error to caller
+                raise
 
         except Exception as e:
-            logger.error(f"❌ Error loading recipe data: {e}")
+            logger.exception("Error loading recipe data")
             raise
 
     def create_user_profile_from_interactions(self, interactions: list[dict]) -> dict:
         """
         Create user profile from a list of interactions.
 
-        For beginners: This analyzes a user's recipe interactions to understand
+        This analyzes a user's recipe interactions to understand
         their preferences and behavior patterns.
 
         Args:
@@ -218,7 +253,7 @@ class ProductionRecipeScorer:
         """
         Score all available recipes for a user based on their interaction history.
 
-        For beginners: This is the main method that takes a user's history
+        This is the main method that takes a user's history
         and scores all recipes to find the best recommendations.
 
         Args:
@@ -229,7 +264,7 @@ class ProductionRecipeScorer:
         Returns:
             List of ranked recipe recommendations with scores and metadata
         """
-        logger.info(f"🎯 Scoring {len(self.recipe_features)} recipes for user...")
+        logger.info(f"Scoring {len(self.recipe_features)} recipes for user")
 
         # Create user profile from interactions
         user_profile = self.create_user_profile_from_interactions(user_interactions)
@@ -298,7 +333,7 @@ class ProductionRecipeScorer:
         # Sort by score and return top N
         recommendations.sort(key=lambda x: x["score"], reverse=True)
 
-        logger.info(f"✅ Generated scores for {len(self.recipe_features)} recipes")
+        logger.info(f"Generated scores for {len(self.recipe_features)} recipes")
         logger.info(f"   Score range: {np.min(scores):.4f} - {np.max(scores):.4f}")
         logger.info(f"   Above threshold ({min_score}): {len(recommendations)} recipes")
         logger.info(
@@ -380,11 +415,10 @@ def demo_usage():
     """
     Demonstrate how to use the production recipe scorer.
 
-    For beginners: This shows a complete example of how to get
+    This shows a complete example of how to get
     recipe recommendations for a user.
     """
-    logger.info("🧪 DEMO: Production Recipe Scorer Usage")
-    logger.info("=" * 60)
+    logger.info("Demo: Production Recipe Scorer Usage")
 
     # Initialize the scorer
     scorer = ProductionRecipeScorer()
@@ -402,7 +436,7 @@ def demo_usage():
 
     # Get recommendations
     logger.info(
-        f"🎯 Getting recommendations for user with {len(sample_interactions)} interactions..."
+        f"Getting recommendations for user with {len(sample_interactions)} interactions"
     )
 
     result = scorer.get_user_recipe_recommendations(
@@ -412,7 +446,7 @@ def demo_usage():
     )
 
     # Display results
-    logger.info("\n📊 RECOMMENDATION RESULTS:")
+    logger.info("Recommendation results:")
     logger.info(
         f"   Processing time: {result['metadata']['processing_time_seconds']:.3f} seconds"
     )
@@ -420,7 +454,7 @@ def demo_usage():
         f"   Total recipes scored: {result['metadata']['total_recipes_scored']}"
     )
 
-    logger.info("\n🍳 TOP 5 RECOMMENDATIONS:")
+    logger.info("Top 5 recommendations:")
     for i, rec in enumerate(result["recommendations"], 1):
         logger.info(f"   {i}. {rec['recipe_name']} (Score: {rec['score']:.4f})")
         logger.info(f"      Author: {rec['author_name']}")
@@ -438,10 +472,9 @@ def api_example():
     """
     Example of how this would be used in a production API.
 
-    For beginners: This shows how to integrate the scorer into a web API.
+    This shows how to integrate the scorer into a web API.
     """
-    logger.info("\n🌐 PRODUCTION API EXAMPLE")
-    logger.info("=" * 40)
+    logger.info("Production API example")
 
     logger.info(
         """
@@ -482,10 +515,9 @@ def main():
     """
     Main function to test the production recipe scorer.
 
-    For beginners: This runs a complete test of the recommendation system.
+    This runs a complete test of the recommendation system.
     """
-    logger.info("🚀 PRODUCTION RECIPE SCORER TEST")
-    logger.info("=" * 70)
+    logger.info("Production Recipe Scorer test")
 
     try:
         # Run demo
@@ -494,15 +526,15 @@ def main():
         # Show API example
         api_example()
 
-        logger.info("🎉 Production Recipe Scorer is ready!")
-        logger.info("   ✅ Can score all recipes for any user in real-time")
-        logger.info("   ✅ Handles user interaction history")
-        logger.info("   ✅ Returns ranked recommendations with metadata")
-        logger.info("   ✅ Ready for integration into production API")
+        logger.info("Production Recipe Scorer is ready")
+        logger.info("   Supports scoring for any user in real-time")
+        logger.info("   Handles user interaction history")
+        logger.info("   Returns ranked recommendations with metadata")
+        logger.info("   Ready for integration into production API")
 
     except Exception as e:
-        logger.error(f"❌ Error: {e}")
-        logger.error("   Make sure the hybrid model has been trained first")
+        logger.exception("Error running Production Recipe Scorer")
+        logger.error("Make sure the hybrid model has been trained first")
 
 
 if __name__ == "__main__":

@@ -8,14 +8,18 @@ score and rank recipes based on user preferences.
 """
 
 import json
+import re
 import warnings
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import HashingVectorizer, TfidfVectorizer
+import joblib
 
-from recipe_recommender.config import get_ml_config
+from recipe_recommender.config import get_feature_columns_to_exclude, get_ml_config
 from recipe_recommender.utils import (
     safe_load_csv,
     safe_save_csv,
@@ -31,7 +35,7 @@ class HybridRecommendationDataBuilder:
     """
     Build training data combining user interactions with rich recipe features.
 
-    For beginners: This class takes raw user interaction data and recipe information
+    This class takes raw user interaction data and recipe information
     to create the training dataset that the ML model learns from.
     """
 
@@ -50,19 +54,336 @@ class HybridRecommendationDataBuilder:
         self.recipe_ingredients: pd.DataFrame = pd.DataFrame()
         self.ingredients: pd.DataFrame = pd.DataFrame()
 
-        logger.info("🏗️ Initialized Hybrid Recommendation Data Builder")
+        logger.info("Initialized Hybrid Recommendation Data Builder")
+
+    # ------------------------------
+    # Text encoding helpers
+    # ------------------------------
+    @staticmethod
+    def _parse_tags(value) -> list[str]:
+        """Parse tags that may be stored as JSON, comma-string, or list."""
+        if value is None or (isinstance(value, float) and np.isnan(value)):
+            return []
+        if isinstance(value, list):
+            return [str(v).strip() for v in value if str(v).strip()]
+        text = str(value).strip()
+        if not text:
+            return []
+        # Try JSON list
+        try:
+            parsed = json.loads(text)
+            if isinstance(parsed, list):
+                return [str(v).strip() for v in parsed if str(v).strip()]
+        except Exception:
+            pass
+        # Fallback: split by comma or pipe or space
+        parts = re.split(r"[,|]", text)
+        if len(parts) == 1:
+            # maybe space separated
+            parts = text.split()
+        return [p.strip() for p in parts if p.strip()]
+
+    @staticmethod
+    def _sanitize_tag(name: str) -> str:
+        s = str(name).lower()
+        s = re.sub(r"[^a-z0-9]+", "_", s)
+        s = re.sub(r"_+", "_", s).strip("_")
+        return s[:40]
+
+    def _fit_text_encoders(self, train_data: pd.DataFrame) -> dict:
+        """Fit text encoders on training split only and return encoder objects.
+
+        Returns a dict with encoder objects, mappings, and generated column schemas.
+        """
+        cfg = self.config.text_encoding
+        if not cfg or not cfg.enable_text_features:
+            return {}
+
+        logger.info("Fitting text encoders on training split")
+
+        # Use only recipes present in training split to fit vectorizers
+        train_recipe_ids = set(train_data["recipe_id"].astype(str).unique())
+        recipes_train = self.recipe_features.copy()
+        recipes_train["recipe_id"] = recipes_train["recipe_id"].astype(str)
+        recipes_train = recipes_train[recipes_train["recipe_id"].isin(train_recipe_ids)]
+
+        encoders: dict = {
+            "config": {
+                "author_id_encoding": cfg.author_id_encoding,
+                "tags_encoding": cfg.tags_encoding,
+                "name_encoding": cfg.name_encoding,
+                "desc_encoding": cfg.desc_encoding,
+                "instr_encoding": cfg.instr_encoding,
+                "tags_top_k": cfg.tags_top_k,
+                "name_hash_dim": cfg.name_hash_dim,
+                "desc_max_features": cfg.desc_max_features,
+                "instr_hash_dim": cfg.instr_hash_dim,
+                "hashing_alternate_sign": cfg.hashing_alternate_sign,
+                "ngram_range": cfg.ngram_range,
+            }
+        }
+
+        # Author encoders
+        if "author_id" in recipes_train.columns:
+            author_series = recipes_train["author_id"].fillna("unknown").astype(str)
+            if cfg.author_id_encoding == "freq":
+                counts = author_series.value_counts()
+                freq = (counts / counts.sum()).astype(float)
+                encoders["author_freq_mapping"] = freq.to_dict()
+            elif cfg.author_id_encoding == "target":
+                # Average positive rate per author from training pairs (Laplace smoothing)
+                tmp = train_data.copy()
+                if "author_id" not in tmp.columns:
+                    # Merge from recipe features
+                    tmp = tmp.merge(
+                        recipes_train[["recipe_id", "author_id"]],
+                        on="recipe_id",
+                        how="left",
+                    )
+                tmp["author_id"] = tmp["author_id"].fillna("unknown").astype(str)
+                grp = (
+                    tmp.groupby("author_id")["label"]
+                    .agg(["sum", "count"])
+                    .reset_index()
+                )
+                # Laplace smoothing: (sum + 1) / (count + 2)
+                grp["te"] = (grp["sum"] + 1.0) / (grp["count"] + 2.0)
+                encoders["author_target_mapping"] = dict(
+                    zip(grp["author_id"], grp["te"])
+                )
+
+        # Tags encoder
+        if "tags" in recipes_train.columns:
+            if cfg.tags_encoding == "topk_multi_hot":
+                tag_counts: dict[str, int] = {}
+                for v in recipes_train["tags"].tolist():
+                    for t in self._parse_tags(v):
+                        tag_counts[t] = tag_counts.get(t, 0) + 1
+                topk = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[
+                    : cfg.tags_top_k
+                ]
+                vocab = [self._sanitize_tag(k) for k, _ in topk]
+                encoders["tags_topk_vocab"] = vocab
+            elif cfg.tags_encoding == "hashing":
+                encoders["tags_hashing"] = HashingVectorizer(
+                    n_features=cfg.name_hash_dim,  # reuse small dim for tags
+                    alternate_sign=cfg.hashing_alternate_sign,
+                    analyzer="word",
+                    ngram_range=cfg.ngram_range,
+                    norm=None,
+                    binary=True,
+                )
+
+        # Recipe name encoder
+        if cfg.name_encoding == "hashing" and "recipe_name" in recipes_train.columns:
+            encoders["name_hashing"] = HashingVectorizer(
+                n_features=cfg.name_hash_dim,
+                alternate_sign=cfg.hashing_alternate_sign,
+                analyzer="word",
+                ngram_range=cfg.ngram_range,
+                norm=None,
+            )
+
+        # Description encoder
+        if "description" in recipes_train.columns:
+            if cfg.desc_encoding == "tfidf":
+                vectorizer = TfidfVectorizer(
+                    max_features=cfg.desc_max_features,
+                    ngram_range=cfg.ngram_range,
+                )
+                corpus = recipes_train["description"].fillna("").astype(str).tolist()
+                vectorizer.fit(corpus)
+                encoders["desc_tfidf"] = vectorizer
+            elif cfg.desc_encoding == "hashing":
+                encoders["desc_hashing"] = HashingVectorizer(
+                    n_features=cfg.desc_max_features,
+                    alternate_sign=cfg.hashing_alternate_sign,
+                    analyzer="word",
+                    ngram_range=cfg.ngram_range,
+                    norm=None,
+                )
+
+        # Instruction encoder
+        if "instruction" in recipes_train.columns:
+            if cfg.instr_encoding == "tfidf":
+                vectorizer = TfidfVectorizer(
+                    max_features=cfg.desc_max_features,
+                    ngram_range=cfg.ngram_range,
+                )
+                corpus = recipes_train["instruction"].fillna("").astype(str).tolist()
+                vectorizer.fit(corpus)
+                encoders["instr_tfidf"] = vectorizer
+            elif cfg.instr_encoding == "hashing":
+                encoders["instr_hashing"] = HashingVectorizer(
+                    n_features=cfg.instr_hash_dim,
+                    alternate_sign=cfg.hashing_alternate_sign,
+                    analyzer="word",
+                    ngram_range=cfg.ngram_range,
+                    norm=None,
+                )
+
+        return encoders
+
+    def _transform_recipe_text_features(
+        self, df: pd.DataFrame, encoders: dict
+    ) -> pd.DataFrame:
+        """Transform recipe-level text fields into numeric feature columns.
+
+        Returns a DataFrame with `recipe_id` and new numeric columns (float32/int32).
+        """
+        if not encoders:
+            return df[["recipe_id"]].copy()
+
+        cfg = self.config.text_encoding
+        df2 = df.copy()
+        df2["recipe_id"] = df2["recipe_id"].astype(str)
+
+        new_cols: dict[str, np.ndarray] = {}
+
+        # Author encodings
+        if "author_id" in df2.columns:
+            author_vals = df2["author_id"].fillna("unknown").astype(str)
+            if "author_freq_mapping" in encoders:
+                mapping = encoders["author_freq_mapping"]
+                new_cols["author_id_freq"] = (
+                    author_vals.map(mapping).fillna(0.0).astype(np.float32).to_numpy()
+                )
+            if "author_target_mapping" in encoders:
+                mapping = encoders["author_target_mapping"]
+                new_cols["author_id_target"] = (
+                    author_vals.map(mapping).fillna(0.5).astype(np.float32).to_numpy()
+                )
+
+        # Tags
+        if (
+            "tags" in df2.columns
+            and cfg.tags_encoding == "topk_multi_hot"
+            and "tags_topk_vocab" in encoders
+        ):
+            vocab = encoders["tags_topk_vocab"]
+            # Create a multi-hot matrix
+            mh = np.zeros((len(df2), len(vocab)), dtype=np.float32)
+            vocab_index = {t: i for i, t in enumerate(vocab)}
+            for row_idx, v in enumerate(df2["tags"].tolist()):
+                for t in [self._sanitize_tag(x) for x in self._parse_tags(v)]:
+                    if t in vocab_index:
+                        mh[row_idx, vocab_index[t]] = 1.0
+            for i, t in enumerate(vocab):
+                new_cols[f"tag__{t}"] = mh[:, i]
+        elif (
+            "tags" in df2.columns
+            and cfg.tags_encoding == "hashing"
+            and "tags_hashing" in encoders
+        ):
+            vec = encoders["tags_hashing"]
+            corpus = [" ".join(self._parse_tags(v)) for v in df2["tags"].tolist()]
+            X = vec.transform(corpus)
+            # Ensure dense array
+            X = X.toarray().astype(np.float32)
+            for i in range(X.shape[1]):
+                new_cols[f"tags_hash_{i}"] = X[:, i]
+
+        # Recipe name
+        if (
+            cfg.name_encoding == "hashing"
+            and "name_hashing" in encoders
+            and "recipe_name" in df2.columns
+        ):
+            vec = encoders["name_hashing"]
+            corpus = df2["recipe_name"].fillna("").astype(str).tolist()
+            X = vec.transform(corpus).toarray().astype(np.float32)
+            for i in range(X.shape[1]):
+                new_cols[f"name_hash_{i}"] = X[:, i]
+
+        # Description
+        if (
+            cfg.desc_encoding == "tfidf"
+            and "desc_tfidf" in encoders
+            and "description" in df2.columns
+        ):
+            vec = encoders["desc_tfidf"]
+            X = (
+                vec.transform(df2["description"].fillna("").astype(str).tolist())
+                .toarray()
+                .astype(np.float32)
+            )
+            # Use feature names for readability
+            try:
+                names = vec.get_feature_names_out()
+            except Exception:
+                names = [f"desc_tfidf_{i}" for i in range(X.shape[1])]
+            for i in range(X.shape[1]):
+                col = f"desc_tfidf_{names[i]}" if i < len(names) else f"desc_tfidf_{i}"
+                # Sanitize column name
+                col = re.sub(r"[^a-zA-Z0-9_]+", "_", col)[:60]
+                new_cols[col] = X[:, i]
+        elif (
+            cfg.desc_encoding == "hashing"
+            and "desc_hashing" in encoders
+            and "description" in df2.columns
+        ):
+            vec = encoders["desc_hashing"]
+            X = (
+                vec.transform(df2["description"].fillna("").astype(str).tolist())
+                .toarray()
+                .astype(np.float32)
+            )
+            for i in range(X.shape[1]):
+                new_cols[f"desc_hash_{i}"] = X[:, i]
+
+        # Instruction
+        if (
+            cfg.instr_encoding == "tfidf"
+            and "instr_tfidf" in encoders
+            and "instruction" in df2.columns
+        ):
+            vec = encoders["instr_tfidf"]
+            X = (
+                vec.transform(df2["instruction"].fillna("").astype(str).tolist())
+                .toarray()
+                .astype(np.float32)
+            )
+            try:
+                names = vec.get_feature_names_out()
+            except Exception:
+                names = [f"instr_tfidf_{i}" for i in range(X.shape[1])]
+            for i in range(X.shape[1]):
+                col = (
+                    f"instr_tfidf_{names[i]}" if i < len(names) else f"instr_tfidf_{i}"
+                )
+                col = re.sub(r"[^a-zA-Z0-9_]+", "_", col)[:60]
+                new_cols[col] = X[:, i]
+        elif (
+            cfg.instr_encoding == "hashing"
+            and "instr_hashing" in encoders
+            and "instruction" in df2.columns
+        ):
+            vec = encoders["instr_hashing"]
+            X = (
+                vec.transform(df2["instruction"].fillna("").astype(str).tolist())
+                .toarray()
+                .astype(np.float32)
+            )
+            for i in range(X.shape[1]):
+                new_cols[f"instr_hash_{i}"] = X[:, i]
+
+        # Build result
+        result = pd.DataFrame({"recipe_id": df2["recipe_id"].astype(str)})
+        for col, arr in new_cols.items():
+            result[col] = arr
+        return result
 
     def load_real_recipe_data(self) -> bool:
         """
         Load the extracted real recipe database.
 
-        For beginners: This loads the recipe data that was fetched from Supabase,
+        This loads the recipe data that was fetched from Supabase,
         including recipe details, ingredients, and relationships between them.
 
         Returns:
             bool: True if successful
         """
-        logger.info("📊 Loading real recipe database...")
+        logger.info("Loading real recipe database")
 
         try:
             # Load enhanced recipe features
@@ -77,7 +398,7 @@ class HybridRecommendationDataBuilder:
                 return False
 
             logger.info(
-                f"✅ Loaded {len(self.recipe_features)} recipes with enhanced features"
+                f"Loaded {len(self.recipe_features)} recipes with enhanced features"
             )
 
             # Load recipe-ingredient relationships
@@ -87,7 +408,7 @@ class HybridRecommendationDataBuilder:
             self.recipe_ingredients = safe_load_csv(ingredients_file)
             if self.recipe_ingredients is not None:
                 logger.info(
-                    f"✅ Loaded {len(self.recipe_ingredients)} recipe-ingredient relationships"
+                    f"Loaded {len(self.recipe_ingredients)} recipe-ingredient relationships"
                 )
 
             # Load ingredient data
@@ -96,32 +417,32 @@ class HybridRecommendationDataBuilder:
             )
             self.ingredients = safe_load_csv(ingredient_master_file)
             if self.ingredients is not None:
-                logger.info(f"✅ Loaded {len(self.ingredients)} ingredients")
+                logger.info(f"Loaded {len(self.ingredients)} ingredients")
 
             return True
 
         except Exception as e:
-            logger.error(f"❌ Error loading real recipe data: {e}")
+            logger.exception("Error loading real recipe data")
             return False
 
     def extract_user_interactions_from_events(self) -> bool:
         """
         Extract user interactions from event files.
 
-        For beginners: This reads the JSON event files containing user interactions
+        This reads the JSON event files containing user interactions
         (recipe views, cooks, favorites) and converts them into structured data.
 
         Returns:
             bool: True if successful
         """
-        logger.info("📱 Extracting user interactions from events...")
+        logger.info("Extracting user interactions from events")
 
         interactions = []
 
         # Process both v1 and v2 events
         for version, filename in [
             ("v1", "v1_events_20250827.json"),
-            ("v2", "v2_events_20250827.json"),
+            ("v2", "v2_events_20250920.json"),
         ]:
             file_path = self.config.input_dir / filename
             logger.info(f"   Processing {filename}...")
@@ -185,7 +506,7 @@ class HybridRecommendationDataBuilder:
                 self.user_interactions["timestamp"], unit="s", errors="coerce"
             )
 
-            logger.info(f"✅ Extracted {len(self.user_interactions)} interactions")
+            logger.info(f"Extracted {len(self.user_interactions)} interactions")
             logger.info(f"   Users: {self.user_interactions['user_id'].nunique()}")
             logger.info(f"   Recipes: {self.user_interactions['recipe_id'].nunique()}")
             logger.info(
@@ -194,20 +515,20 @@ class HybridRecommendationDataBuilder:
 
             return True
 
-        logger.error("❌ No interactions found")
+        logger.error("No interactions found")
         return False
 
     def create_user_profiles(self) -> pd.DataFrame:
         """
         Create user profile features from interaction history.
 
-        For beginners: This analyzes each user's behavior patterns to create
+        This analyzes each user's behavior patterns to create
         features like average rating, cooking frequency, recipe preferences, etc.
 
         Returns:
             DataFrame with user profile features
         """
-        logger.info("👤 Creating user profiles...")
+        logger.info("Creating user profiles")
 
         if self.user_interactions.empty:
             logger.warning("No user interactions available")
@@ -265,7 +586,7 @@ class HybridRecommendationDataBuilder:
             "interactions_per_day"
         ].fillna(0)
 
-        logger.info(f"✅ Created profiles for {len(user_profiles)} users")
+        logger.info(f"Created profiles for {len(user_profiles)} users")
         return user_profiles
 
     def create_user_recipe_pairs(
@@ -274,7 +595,7 @@ class HybridRecommendationDataBuilder:
         """
         Create user-recipe pairs with positive and negative samples.
 
-        For beginners: This creates training examples by pairing users with recipes
+        This creates training examples by pairing users with recipes
         they interacted with (positive) and recipes they haven't seen (negative).
 
         Args:
@@ -287,7 +608,7 @@ class HybridRecommendationDataBuilder:
         if negative_sampling_ratio is None:
             negative_sampling_ratio = self.config.negative_sampling_ratio
 
-        logger.info("🔗 Creating user-recipe training pairs...")
+        logger.info("Creating user-recipe training pairs")
 
         # Get all positive interactions (actual user-recipe pairs)
         positive_pairs = (
@@ -304,10 +625,10 @@ class HybridRecommendationDataBuilder:
         )
 
         positive_pairs["label"] = 1
-        logger.info(f"✅ Created {len(positive_pairs)} positive pairs")
+        logger.info(f"Created {len(positive_pairs)} positive pairs")
 
         # Create negative samples
-        logger.info("🔄 Generating negative samples...")
+        logger.info("Generating negative samples")
         all_users = positive_pairs["user_id"].unique()
         all_recipes = self.recipe_features["recipe_id"].astype(str).unique()
 
@@ -346,7 +667,7 @@ class HybridRecommendationDataBuilder:
                     )
 
         negative_df = pd.DataFrame(negative_pairs)
-        logger.info(f"✅ Created {len(negative_df)} negative pairs")
+        logger.info(f"Created {len(negative_df)} negative pairs")
 
         # Combine positive and negative samples
         all_pairs = pd.concat(
@@ -357,7 +678,7 @@ class HybridRecommendationDataBuilder:
             ignore_index=True,
         )
 
-        logger.info(f"📊 Total training pairs: {len(all_pairs)}")
+        logger.info(f"Total training pairs: {len(all_pairs)}")
         logger.info(
             f"   Positive: {len(positive_pairs)} ({len(positive_pairs) / len(all_pairs) * 100:.1f}%)"
         )
@@ -373,7 +694,7 @@ class HybridRecommendationDataBuilder:
         """
         Create comprehensive training features combining user, recipe, and interaction data.
 
-        For beginners: This combines user profile data with recipe characteristics
+        This combines user profile data with recipe characteristics
         to create the features that the ML model will learn from.
 
         Args:
@@ -383,7 +704,7 @@ class HybridRecommendationDataBuilder:
         Returns:
             DataFrame ready for ML training
         """
-        logger.info("🔧 Creating comprehensive training features...")
+        logger.info("Creating comprehensive training features")
 
         # Start with user-recipe pairs
         training_data = user_recipe_pairs.copy()
@@ -420,7 +741,7 @@ class HybridRecommendationDataBuilder:
         training_data = self._handle_missing_values(training_data)
 
         logger.info(
-            f"✅ Created training dataset with {len(training_data)} samples and {len(training_data.columns)} features"
+            f"Created training dataset with {len(training_data)} samples and {len(training_data.columns)} features"
         )
 
         return training_data
@@ -480,14 +801,13 @@ class HybridRecommendationDataBuilder:
         """
         Prepare complete training dataset with train/val/test splits.
 
-        For beginners: This is the main method that orchestrates the entire
+        This is the main method that orchestrates the entire
         data preparation pipeline from raw events to ML-ready training data.
 
         Returns:
             Tuple of (train_data, val_data, test_data) or (None, None, None) if failed
         """
-        logger.info("🎯 PREPARING TRAINING DATA FOR HYBRID RECOMMENDATION MODEL")
-        logger.info("=" * 70)
+        logger.info("Preparing training data for hybrid recommendation model")
 
         # Load all data
         if not self.load_real_recipe_data():
@@ -499,23 +819,44 @@ class HybridRecommendationDataBuilder:
         # Create user profiles
         user_profiles = self.create_user_profiles()
         if user_profiles.empty:
-            logger.error("❌ Failed to create user profiles")
+            logger.error("Failed to create user profiles")
             return None, None, None
 
         # Create user-recipe pairs
         user_recipe_pairs = self.create_user_recipe_pairs()
         if user_recipe_pairs.empty:
-            logger.error("❌ Failed to create user-recipe pairs")
+            logger.error("Failed to create user-recipe pairs")
             return None, None, None
+
+        # Drop users with no interactions (safety) or no positives
+        # Keep only users present in interactions and with at least 1 positive label
+        logger.info(
+            "Filtering users with insufficient interactions/positives for ranking"
+        )
+        users_with_interactions = set(self.user_interactions["user_id"].unique())
+        user_pos_counts = (
+            user_recipe_pairs[user_recipe_pairs["label"] == 1].groupby("user_id").size()
+        )
+        users_with_positive = set(user_pos_counts.index.tolist())
+
+        eligible_users = users_with_interactions.intersection(users_with_positive)
+        before_count = len(user_recipe_pairs)
+        user_recipe_pairs = user_recipe_pairs[
+            user_recipe_pairs["user_id"].isin(eligible_users)
+        ].reset_index(drop=True)
+        after_count = len(user_recipe_pairs)
+        logger.info(
+            f"   Kept {len(eligible_users)} users eligible for ranking; pairs: {before_count} -> {after_count}"
+        )
 
         # Create training features
         training_data = self.create_training_features(user_recipe_pairs, user_profiles)
         if training_data.empty:
-            logger.error("❌ Failed to create training features")
+            logger.error("Failed to create training features")
             return None, None, None
 
         # Split data temporally (most recent interactions for testing)
-        logger.info("📊 Creating train/validation/test splits...")
+        logger.info("Creating train/validation/test splits")
 
         # Sort by timestamp for temporal split
         if "datetime" in training_data.columns:
@@ -547,7 +888,7 @@ class HybridRecommendationDataBuilder:
                 stratify=temp_data["label"],
             )
 
-        logger.info("✅ Data splits created:")
+        logger.info("Data splits created:")
         logger.info(
             f"   Train: {len(train_data)} samples ({len(train_data) / len(training_data) * 100:.1f}%)"
         )
@@ -558,16 +899,101 @@ class HybridRecommendationDataBuilder:
             f"   Test: {len(test_data)} samples ({len(test_data) / len(training_data) * 100:.1f}%)"
         )
 
+        # Optionally fit and apply text encoders (train-only fit)
+        text_feature_columns: list[str] = []
+        text_encoder_artifacts: dict = {}
+        if self.config.text_encoding and self.config.text_encoding.enable_text_features:
+            encoders = self._fit_text_encoders(train_data)
+
+            # Transform full recipe catalog to encoded features
+            encoded_recipe_features = self._transform_recipe_text_features(
+                self.recipe_features, encoders
+            )
+
+            # Merge encoded features into each split
+            for split_name, df_ref in (
+                ("train", train_data),
+                ("val", val_data),
+                ("test", test_data),
+                ("all", training_data),
+            ):
+                df_ref.merge(
+                    encoded_recipe_features, on="recipe_id", how="left", copy=False
+                )
+            # The above merge with copy=False modifies in place only in pandas >= 2.0; ensure assignment
+            train_data = train_data.merge(
+                encoded_recipe_features, on="recipe_id", how="left"
+            )
+            val_data = val_data.merge(
+                encoded_recipe_features, on="recipe_id", how="left"
+            )
+            test_data = test_data.merge(
+                encoded_recipe_features, on="recipe_id", how="left"
+            )
+            training_data = training_data.merge(
+                encoded_recipe_features, on="recipe_id", how="left"
+            )
+
+            # Save encoded recipe features CSV for inference
+            encoded_catalog = self.recipe_features.copy()
+            encoded_catalog = encoded_catalog.merge(
+                encoded_recipe_features, on="recipe_id", how="left"
+            )
+            safe_save_csv(
+                encoded_catalog,
+                self.config.output_dir / self.config.encoded_recipe_features_filename,
+            )
+
+            # Persist vectorizers (non-hashing) and mappings
+            vec_dir = self.config.model_dir / "text_vectorizers"
+            vec_dir.mkdir(parents=True, exist_ok=True)
+            text_encoder_artifacts["vectorizers_dir"] = str(vec_dir)
+            artifact_paths: dict[str, str] = {}
+
+            if "desc_tfidf" in encoders:
+                path = vec_dir / "desc_tfidf.joblib"
+                joblib.dump(encoders["desc_tfidf"], path)
+                artifact_paths["desc_tfidf"] = str(path)
+            if "instr_tfidf" in encoders:
+                path = vec_dir / "instr_tfidf.joblib"
+                joblib.dump(encoders["instr_tfidf"], path)
+                artifact_paths["instr_tfidf"] = str(path)
+            if "author_target_mapping" in encoders:
+                path = vec_dir / "author_target_mapping.json"
+                save_json_file(encoders["author_target_mapping"], path)
+                artifact_paths["author_target_mapping"] = str(path)
+            if "author_freq_mapping" in encoders:
+                path = vec_dir / "author_freq_mapping.json"
+                save_json_file(encoders["author_freq_mapping"], path)
+                artifact_paths["author_freq_mapping"] = str(path)
+
+            text_encoder_artifacts["artifacts"] = artifact_paths
+            text_encoder_artifacts["config"] = encoders.get("config", {})
+
+            # Collect newly added column names
+            text_feature_columns = [
+                c
+                for c in training_data.columns
+                if c.startswith("author_id_")
+                or c.startswith("tag__")
+                or c.startswith("name_hash_")
+                or c.startswith("desc_tfidf_")
+                or c.startswith("desc_hash_")
+                or c.startswith("instr_tfidf_")
+                or c.startswith("instr_hash_")
+            ]
+
         # Save datasets using utilities
         safe_save_csv(train_data, self.config.output_dir / "hybrid_train_data.csv")
         safe_save_csv(val_data, self.config.output_dir / "hybrid_val_data.csv")
         safe_save_csv(test_data, self.config.output_dir / "hybrid_test_data.csv")
 
-        # Save feature columns
+        # Save feature columns (exclude IDs, labels, timestamps, and raw excluded text columns)
+        excluded_cols = set(
+            ["user_id", "recipe_id", "label", "rating", "datetime"]
+        ) | set(get_feature_columns_to_exclude())
         feature_columns = [
-            col
-            for col in training_data.columns
-            if col not in ["user_id", "recipe_id", "label", "rating", "datetime"]
+            col for col in training_data.columns if col not in excluded_cols
         ]
 
         feature_file = self.config.output_dir / "hybrid_feature_columns.txt"
@@ -585,11 +1011,25 @@ class HybridRecommendationDataBuilder:
             "created_at": datetime.now().isoformat(),
         }
 
+        # Extend metadata with text encoding details
+        if self.config.text_encoding and self.config.text_encoding.enable_text_features:
+            metadata.update(
+                {
+                    "text_features_enabled": True,
+                    "text_feature_columns": text_feature_columns,
+                    "text_encoders": text_encoder_artifacts,
+                    "encoded_recipe_features_file": str(
+                        self.config.output_dir
+                        / self.config.encoded_recipe_features_filename
+                    ),
+                }
+            )
+
         save_json_file(
             metadata, self.config.output_dir / "hybrid_training_metadata.json"
         )
 
-        logger.info("\n💾 Saved training data:")
+        logger.info("Saved training data:")
         logger.info(f"   - hybrid_train_data.csv ({len(train_data)} samples)")
         logger.info(f"   - hybrid_val_data.csv ({len(val_data)} samples)")
         logger.info(f"   - hybrid_test_data.csv ({len(test_data)} samples)")
@@ -605,19 +1045,18 @@ def main():
     """
     Main function to build hybrid recommendation training data.
 
-    For beginners: This runs the complete data preparation pipeline
+    This runs the complete data preparation pipeline
     from raw events to ML-ready training datasets.
     """
-    logger.info("🚀 HYBRID RECOMMENDATION DATA BUILDER")
-    logger.info("=" * 80)
+    logger.info("Hybrid recommendation data builder")
 
     builder = HybridRecommendationDataBuilder()
 
     train_data, val_data, test_data = builder.prepare_training_data()
 
     if train_data is not None:
-        logger.info("\n🎉 SUCCESS! Hybrid recommendation training data ready:")
-        logger.info("   - Combined user interactions with rich recipe features")
+        logger.info("Hybrid recommendation training data ready:")
+        logger.info("   - Combined user interactions with recipe features")
         logger.info(
             f"   - {len(train_data) + len(val_data) + len(test_data)} total training samples"
         )
@@ -630,7 +1069,7 @@ def main():
             if col not in ["user_id", "recipe_id", "label", "rating", "datetime"]
         ]
 
-        logger.info(f"\n📊 FEATURE SUMMARY ({len(feature_columns)} total):")
+        logger.info(f"Feature summary ({len(feature_columns)} total):")
         user_features = [
             col
             for col in feature_columns
@@ -665,15 +1104,15 @@ def main():
             col for col in feature_columns if "match" in col or "compatibility" in col
         ]
 
-        logger.info(f"   👤 User features: {len(user_features)}")
-        logger.info(f"   🍳 Recipe features: {len(recipe_features)}")
-        logger.info(f"   🔗 Interaction features: {len(interaction_features)}")
+        logger.info(f"   User features: {len(user_features)}")
+        logger.info(f"   Recipe features: {len(recipe_features)}")
+        logger.info(f"   Interaction features: {len(interaction_features)}")
         logger.info(
-            f"   📱 Other features: {len(feature_columns) - len(user_features) - len(recipe_features) - len(interaction_features)}"
+            f"   Other features: {len(feature_columns) - len(user_features) - len(recipe_features) - len(interaction_features)}"
         )
 
     else:
-        logger.error("❌ Failed to build training data")
+        logger.error("Failed to build training data")
 
 
 if __name__ == "__main__":

@@ -48,7 +48,7 @@ class HybridGBMRecommender:
         """
         Initialize the recommender with configuration.
 
-        For beginners: The config object contains all the settings
+        The config object contains all the settings
         like file paths, model parameters, etc. This makes it easy
         to change settings without hunting through code.
 
@@ -68,19 +68,19 @@ class HybridGBMRecommender:
         self.test_data: pd.DataFrame | None = None
         self.recipe_features: pd.DataFrame | None = None
 
-        logger.info(f"🚀 Initialized GBM Recommender with {self.config.model_type}")
+        logger.info(f"Initialized GBM Recommender with {self.config.model_type}")
 
     def load_training_data(self) -> bool:
         """
         Load the prepared training datasets.
 
-        For beginners: This method loads the CSV files that were created
+        This method loads the CSV files that were created
         by the data builder. It expects train/validation/test splits.
 
         Returns:
             bool: True if successful, False otherwise
         """
-        logger.info("📊 Loading training data...")
+        logger.info("Loading training data")
 
         try:
             # Load the three data splits
@@ -92,7 +92,7 @@ class HybridGBMRecommender:
             self.val_data = pd.read_csv(val_file)
             self.test_data = pd.read_csv(test_file)
 
-            logger.info("✅ Successfully loaded training data:")
+            logger.info("Successfully loaded training data:")
             logger.info(f"   Train: {len(self.train_data):,} samples")
             logger.info(f"   Validation: {len(self.val_data):,} samples")
             logger.info(f"   Test: {len(self.test_data):,} samples")
@@ -105,8 +105,8 @@ class HybridGBMRecommender:
 
             return True
 
-        except Exception as e:
-            logger.error(f"❌ Failed to load training data: {e}")
+        except Exception:
+            logger.exception("Failed to load training data")
             return False
 
     def _load_feature_columns(self) -> None:
@@ -116,9 +116,9 @@ class HybridGBMRecommender:
             self.feature_columns = [
                 line.strip() for line in feature_file.read_text().splitlines()
             ]
-            logger.info(f"📋 Loaded {len(self.feature_columns)} feature columns")
+            logger.info(f"Loaded {len(self.feature_columns)} feature columns")
         else:
-            logger.warning("⚠️  Feature columns file not found")
+            logger.warning("Feature columns file not found")
 
     def _load_training_metadata(self) -> None:
         """Load metadata about how the training data was created."""
@@ -126,23 +126,32 @@ class HybridGBMRecommender:
         if metadata_file.exists():
             with open(metadata_file) as f:
                 self.training_metadata = json.load(f)
-            logger.info("📋 Loaded training metadata")
+            logger.info("Loaded training metadata")
         else:
-            logger.warning("⚠️  Training metadata not found")
+            logger.warning("Training metadata not found")
 
     def load_recipe_features(self) -> bool:
         """Load full recipe features for scoring all recipes."""
         try:
-            self.recipe_features = pd.read_csv(
-                self.config.output_dir / "enhanced_recipe_features_from_db.csv"
+            # Prefer encoded recipe features if present
+            encoded_path = (
+                self.config.output_dir / self.config.encoded_recipe_features_filename
             )
+            raw_path = self.config.output_dir / self.config.raw_recipe_features_filename
+
+            if encoded_path.exists():
+                self.recipe_features = pd.read_csv(encoded_path)
+                logger.info(f"Loaded encoded recipe features from {encoded_path.name}")
+            else:
+                self.recipe_features = pd.read_csv(raw_path)
+                logger.info(f"Loaded raw recipe features from {raw_path.name}")
             self.recipe_features["recipe_id"] = self.recipe_features[
                 "recipe_id"
             ].astype(str)
-            logger.info(f"✅ Loaded {len(self.recipe_features)} recipes for scoring")
+            logger.info(f"Loaded {len(self.recipe_features)} recipes for scoring")
             return True
-        except Exception as e:
-            logger.error(f"❌ Error loading recipe features: {e}")
+        except Exception:
+            logger.exception("Error loading recipe features")
             return False
 
     def prepare_features(
@@ -151,14 +160,14 @@ class HybridGBMRecommender:
         """
         Prepare the features for machine learning.
 
-        For beginners: This step filters out text/string columns that
+        This step filters out text/string columns that
         aren't useful for ML and keeps only numeric features that the
         model can learn from.
 
         Returns:
             Tuple of (X_train, y_train, X_val, y_val)
         """
-        logger.info("🔧 Preparing features for training...")
+        logger.info("Preparing features for training")
 
         if self.train_data is None:
             raise ValueError(
@@ -181,7 +190,7 @@ class HybridGBMRecommender:
         # Update feature columns to filtered list
         self.feature_columns = ml_features
 
-        logger.info(f"📊 Using {len(ml_features)} numeric features")
+        logger.info(f"Using {len(ml_features)} numeric features")
 
         # Prepare training data
         X_train = self.train_data[self.feature_columns]
@@ -189,7 +198,7 @@ class HybridGBMRecommender:
         X_val = self.val_data[self.feature_columns]
         y_val = self.val_data["label"]
 
-        logger.info(f"📊 Training data shape: {X_train.shape}")
+        logger.info(f"Training data shape: {X_train.shape}")
         logger.info(
             f"   Positive samples: {y_train.sum():,} ({y_train.mean() * 100:.1f}%)"
         )
@@ -200,37 +209,43 @@ class HybridGBMRecommender:
         """
         Train the gradient boosting model.
 
-        For beginners: This is where the actual machine learning happens.
+        This is where the actual machine learning happens.
         The model learns patterns from the training data to predict which
         recipes a user might like.
 
         Returns:
             bool: True if training successful
         """
-        logger.info(f"🚀 Training {self.config.model_type.upper()} model...")
+        logger.info(f"Training {self.config.model_type.upper()} model")
 
         # Prepare the features
         X_train, y_train, X_val, y_val = self.prepare_features()
 
-        # Set up model parameters
-        # For beginners: These control how the model learns
+        # Set up model parameters for ranking (Lambdarank)
         params = {
-            "objective": "binary",  # We're predicting like/don't like (binary)
-            "metric": "binary_logloss",  # How to measure training progress
-            "boosting_type": "gbdt",  # Gradient boosting decision trees
-            "num_leaves": self.config.num_leaves,  # Complexity of each tree
-            "learning_rate": self.config.learning_rate,  # How fast the model learns
-            "feature_fraction": self.config.feature_fraction,  # Use 80% of features each round
-            "bagging_fraction": self.config.bagging_fraction,  # Use 80% of data each round
-            "bagging_freq": self.config.bagging_freq,  # How often to resample data
-            "min_child_samples": self.config.min_child_samples,  # Prevent overfitting
-            "random_state": self.config.random_state,  # For reproducible results
-            "verbosity": -1,  # Quiet training
+            "objective": "lambdarank",
+            "metric": "ndcg",
+            "ndcg_eval_at": list(self.config.ndcg_eval_at),
+            "boosting_type": "gbdt",
+            "num_leaves": self.config.num_leaves,
+            "learning_rate": self.config.learning_rate,
+            "feature_fraction": self.config.feature_fraction,
+            "bagging_fraction": self.config.bagging_fraction,
+            "bagging_freq": self.config.bagging_freq,
+            "min_child_samples": self.config.min_child_samples,
+            "random_state": self.config.random_state,
+            "verbosity": -1,
         }
 
-        # Create LightGBM datasets
-        train_dataset = lgb.Dataset(X_train, label=y_train)
-        val_dataset = lgb.Dataset(X_val, label=y_val, reference=train_dataset)
+        # Build group arrays per user for train/val
+        train_groups = self.train_data.groupby("user_id").size().values
+        val_groups = self.val_data.groupby("user_id").size().values
+
+        # Create LightGBM datasets with groups
+        train_dataset = lgb.Dataset(X_train, label=y_train, group=train_groups)
+        val_dataset = lgb.Dataset(
+            X_val, label=y_val, group=val_groups, reference=train_dataset
+        )
 
         # Train the model
         self.model = lgb.train(
@@ -245,37 +260,38 @@ class HybridGBMRecommender:
             ],
         )
 
-        logger.info("✅ Model training completed!")
+        logger.info("Model training completed")
         return True
 
     def evaluate_model(self) -> dict[str, float]:
         """
         Evaluate how well the trained model performs.
 
-        For beginners: This tests the model on data it hasn't seen before
+        This tests the model on data it hasn't seen before
         to see how accurately it can predict user preferences.
 
         Returns:
             Dict of performance metrics
         """
-        logger.info("📈 Evaluating model performance...")
+        logger.info("Evaluating model performance")
 
         if self.model is None:
-            logger.error("❌ No trained model available")
+            logger.error("No trained model available")
             return {}
 
         # Prepare test data
         X_test = self.test_data[self.feature_columns]
         y_test = self.test_data["label"]
 
-        # Get model predictions
+        # Get model predictions (scores for ranking)
         y_pred_proba = self.model.predict(
             X_test, num_iteration=self.model.best_iteration
         )
-        y_pred = (y_pred_proba > 0.5).astype(int)  # Convert probabilities to yes/no
+        # For binary metrics, we can derive labels via 0.5 threshold (for reference only)
+        y_pred = (y_pred_proba > 0.5).astype(int)
 
         # Calculate performance metrics
-        # For beginners: These metrics tell us how good the model is
+        # These metrics tell us how good the model is
         metrics = {
             "auc": roc_auc_score(
                 y_test, y_pred_proba
@@ -292,16 +308,15 @@ class HybridGBMRecommender:
         ranking_metrics = self._evaluate_ranking_metrics(y_test, y_pred_proba)
         metrics.update(ranking_metrics)
 
-        # Log the results
-        logger.info("📊 MODEL PERFORMANCE:")
-        logger.info(f"   AUC: {metrics['auc']:.4f} (0.5=random, 1.0=perfect)")
-        logger.info(f"   Precision: {metrics['precision']:.4f}")
-        logger.info(f"   Recall: {metrics['recall']:.4f}")
-        logger.info(f"   F1-Score: {metrics['f1']:.4f}")
-
+        # Log the results (ranking-focused)
+        logger.info("Model performance:")
         if "ndcg_5" in metrics:
             logger.info(f"   NDCG@5: {metrics['ndcg_5']:.4f}")
             logger.info(f"   NDCG@10: {metrics['ndcg_10']:.4f}")
+        logger.info(f"   AUC: {metrics['auc']:.4f} (reference)")
+        logger.info(f"   Precision: {metrics['precision']:.4f} (reference)")
+        logger.info(f"   Recall: {metrics['recall']:.4f} (reference)")
+        logger.info(f"   F1-Score: {metrics['f1']:.4f} (reference)")
 
         return metrics
 
@@ -315,6 +330,8 @@ class HybridGBMRecommender:
 
             user_ndcg_5 = []
             user_ndcg_10 = []
+            user_recall_5 = []
+            user_recall_10 = []
 
             for user_id in test_with_preds["user_id"].unique():
                 user_data = test_with_preds[test_with_preds["user_id"] == user_id]
@@ -338,12 +355,28 @@ class HybridGBMRecommender:
                 except Exception:
                     continue
 
+                # Recall@k (only for users with at least one positive)
+                y_true_flat = y_true_user.ravel()
+                pos_total = float(y_true_flat.sum())
+                if pos_total > 0:
+                    order = np.argsort(-y_score_user.ravel())
+                    top5 = order[: min(5, len(order))]
+                    top10 = order[: min(10, len(order))]
+                    rec5 = y_true_flat[top5].sum() / pos_total
+                    rec10 = y_true_flat[top10].sum() / pos_total
+                    user_recall_5.append(rec5)
+                    user_recall_10.append(rec10)
+
             if user_ndcg_5:
-                return {
+                result = {
                     "ndcg_5": np.mean(user_ndcg_5),
                     "ndcg_10": np.mean(user_ndcg_10),
                     "users_evaluated": len(user_ndcg_5),
                 }
+                if user_recall_5:
+                    result["recall_5"] = float(np.mean(user_recall_5))
+                    result["recall_10"] = float(np.mean(user_recall_10))
+                return result
             return {"users_evaluated": 0}
 
         except Exception as e:
@@ -354,7 +387,7 @@ class HybridGBMRecommender:
         """
         Get which features the model found most important.
 
-        For beginners: This shows which user/recipe characteristics
+        This shows which user/recipe characteristics
         matter most for making good recommendations.
 
         Returns:
@@ -376,16 +409,16 @@ class HybridGBMRecommender:
         """
         Save the trained model for later use.
 
-        For beginners: This saves your trained model so you can use it
+        This saves your trained model so you can use it
         later without having to retrain from scratch.
 
         Returns:
             bool: True if save successful
         """
-        logger.info("💾 Saving trained model...")
+        logger.info("Saving trained model")
 
         if self.model is None:
-            logger.error("❌ No model to save")
+            logger.error("No model to save")
             return False
 
         # Save the model file
@@ -414,8 +447,8 @@ class HybridGBMRecommender:
         with open(metadata_file, "w") as f:
             json.dump(metadata, f, indent=2)
 
-        logger.info(f"✅ Model saved to: {model_file.name}")
-        logger.info(f"✅ Metadata saved to: {metadata_file.name}")
+        logger.info(f"Model saved to: {model_file.name}")
+        logger.info(f"Metadata saved to: {metadata_file.name}")
 
         return True
 
@@ -424,26 +457,26 @@ def main():
     """
     Main function to train and evaluate the model.
 
-    For beginners: This is the complete workflow from start to finish.
+    This is the complete workflow from start to finish.
     """
-    print("🚀 HYBRID GBM RECIPE RECOMMENDER")
-    print("=" * 60)
+    print("Hybrid GBM Recipe Recommender")
+    print("-" * 60)
 
     # Initialize with configuration
     recommender = HybridGBMRecommender()
 
     # Step 1: Load data
     if not recommender.load_training_data():
-        print("❌ Failed to load training data")
+        print("Failed to load training data")
         return
 
     if not recommender.load_recipe_features():
-        print("❌ Failed to load recipe features")
+        print("Failed to load recipe features")
         return
 
     # Step 2: Train model
     if not recommender.train_model():
-        print("❌ Failed to train model")
+        print("Failed to train model")
         return
 
         # Step 3: Evaluate performance
@@ -452,15 +485,15 @@ def main():
     # Step 4: Show feature importance
     importance = recommender.get_feature_importance()
     if not importance.empty:
-        print("\n📊 TOP 10 MOST IMPORTANT FEATURES:")
+        print("\nTop 10 most important features:")
         for _, row in importance.head(10).iterrows():
             print(f"   {row['feature']}: {row['importance']:.0f}")
 
     # Step 5: Save the model
     recommender.save_model()
 
-    print("\n🎉 Training completed successfully!")
-    print("   Model can now score and rank recipes for any user!")
+    print("\nTraining completed successfully")
+    print("   Model can now score and rank recipes for any user")
     print("   Next: Use the trained model for real-time recommendations")
 
 

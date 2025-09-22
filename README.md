@@ -72,8 +72,9 @@ Notes:
 
 ### Feature Engineering
 - **User Features (11)**: Engagement patterns, cooking frequency, preferences
-- **Recipe Features (10)**: Complexity, ingredients, timing, categories
+- **Recipe Features (10+)**: Complexity, ingredients, timing, categories
 - **Interaction Features (3)**: Compatibility scores between user and recipe characteristics
+- **Optional Text Features (configurable)**: Encoded `author_id`, `tags`, `recipe_name`, `description`, `instruction` (see Text Feature Encodings below)
 
 ## 🚀 Quick Start - Using the Model
 
@@ -129,6 +130,15 @@ config = get_ml_config()
 config.learning_rate = 0.05
 config.num_leaves = 50
 config.negative_sampling_ratio = 3
+
+# Enable simple text encodings (optional)
+cfg = config.text_encoding
+cfg.enable_text_features = True
+cfg.tags_encoding = "topk_multi_hot"  # or "hashing"
+cfg.tags_top_k = 50
+cfg.author_id_encoding = "freq"       # or "target"
+cfg.name_encoding = "hashing"         # small dim hashing for recipe name
+
 
 # Use custom config
 from recipe_recommender.models.hybrid_gbm_recommender import HybridGBMRecommender
@@ -299,11 +309,15 @@ recipe_recommender/
 
 ### Supabase Setup
 1. Go to your Supabase project → Settings → API
-2. Set environment variables:
+2. Set environment variables (or create a .env file in the project root):
 ```bash
-export SUPABASE_URL=https://awscrmohelsluoiekqud.supabase.co
+export SUPABASE_URL=https://your-project-id.supabase.co
 export SUPABASE_ANON_KEY=your-anon-key
-export SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+export SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # optional for admin access
+```
+3. Test the connection:
+```bash
+uv run python recipe_recommender/etl/database/supabase_config.py
 ```
 
 ### Database Requirements

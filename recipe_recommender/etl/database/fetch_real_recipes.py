@@ -32,7 +32,7 @@ class RealRecipeDataFetcher:
 
     def fetch_recipes(self, limit: int | None = None) -> pd.DataFrame:
         """Fetch all recipe data."""
-        print("🍳 Fetching recipes from database...")
+        print("Fetching recipes from database...")
 
         try:
             query = self.client.table("recipe").select("*")
@@ -43,7 +43,7 @@ class RealRecipeDataFetcher:
 
             if response.data:
                 df = pd.DataFrame(response.data)
-                print(f"✅ Fetched {len(df)} recipes")
+                print(f"Fetched {len(df)} recipes")
 
                 # Convert datetime columns with flexible parsing
                 datetime_cols = ["created_at", "updated_at"]
@@ -55,54 +55,54 @@ class RealRecipeDataFetcher:
 
                 self.recipes_df = df
                 return df
-            print("⚠️  No recipe data found")
+            print("No recipe data found")
             return pd.DataFrame()
 
         except Exception as e:
-            print(f"❌ Error fetching recipes: {e}")
+            print(f"Error fetching recipes: {e}")
             return pd.DataFrame()
 
     def fetch_ingredients(self) -> pd.DataFrame:
         """Fetch all ingredient data."""
-        print("🥕 Fetching ingredients from database...")
+        print("Fetching ingredients from database...")
 
         try:
             response = self.client.table("ingredient").select("*").execute()
 
             if response.data:
                 df = pd.DataFrame(response.data)
-                print(f"✅ Fetched {len(df)} ingredients")
+                print(f"Fetched {len(df)} ingredients")
                 self.ingredients_df = df
                 return df
-            print("⚠️  No ingredient data found")
+            print("No ingredient data found")
             return pd.DataFrame()
 
         except Exception as e:
-            print(f"❌ Error fetching ingredients: {e}")
+            print(f"Error fetching ingredients: {e}")
             return pd.DataFrame()
 
     def fetch_recipe_ingredients(self) -> pd.DataFrame:
         """Fetch recipe-ingredient relationships."""
-        print("🔗 Fetching recipe-ingredient relationships...")
+        print("Fetching recipe-ingredient relationships...")
 
         try:
             response = self.client.table("ingredients_of_recipe").select("*").execute()
 
             if response.data:
                 df = pd.DataFrame(response.data)
-                print(f"✅ Fetched {len(df)} recipe-ingredient relationships")
+                print(f"Fetched {len(df)} recipe-ingredient relationships")
                 self.recipe_ingredients_df = df
                 return df
-            print("⚠️  No recipe-ingredient data found")
+            print("No recipe-ingredient data found")
             return pd.DataFrame()
 
         except Exception as e:
-            print(f"❌ Error fetching recipe-ingredient relationships: {e}")
+            print(f"Error fetching recipe-ingredient relationships: {e}")
             return pd.DataFrame()
 
     def fetch_collections(self) -> pd.DataFrame:
         """Fetch recipe collections."""
-        print("📚 Fetching recipe collections...")
+        print("Fetching recipe collections...")
 
         try:
             # Fetch collections
@@ -120,7 +120,7 @@ class RealRecipeDataFetcher:
                 collection_recipes_data.extend(collection_recipes_response.data)
 
             print(
-                f"✅ Fetched {len(collections_data)} collections and {len(collection_recipes_data)} collection-recipe relationships"
+                f"Fetched {len(collections_data)} collections and {len(collection_recipes_data)} collection-recipe relationships"
             )
 
             return {
@@ -129,16 +129,16 @@ class RealRecipeDataFetcher:
             }
 
         except Exception as e:
-            print(f"❌ Error fetching collections: {e}")
+            print(f"Error fetching collections: {e}")
             return {"collections": pd.DataFrame(), "collection_recipes": pd.DataFrame()}
 
     def analyze_data_structure(self):
         """Analyze the structure of the fetched data."""
-        print("\n📊 DATABASE STRUCTURE ANALYSIS")
-        print("=" * 60)
+        print("\nDatabase structure analysis")
+        print("-" * 60)
 
         if not self.recipes_df.empty:
-            print(f"\n🍳 RECIPES TABLE ({len(self.recipes_df)} records):")
+            print(f"\nRECIPES TABLE ({len(self.recipes_df)} records):")
             print(f"   Columns: {list(self.recipes_df.columns)}")
 
             # Show sample data
@@ -152,7 +152,7 @@ class RealRecipeDataFetcher:
                     print(f"     {col}: {display_val}")
 
         if not self.ingredients_df.empty:
-            print(f"\n🥕 INGREDIENTS TABLE ({len(self.ingredients_df)} records):")
+            print(f"\nINGREDIENTS TABLE ({len(self.ingredients_df)} records):")
             print(f"   Columns: {list(self.ingredients_df.columns)}")
 
             if len(self.ingredients_df) > 0:
@@ -166,7 +166,7 @@ class RealRecipeDataFetcher:
 
         if not self.recipe_ingredients_df.empty:
             print(
-                f"\n🔗 RECIPE-INGREDIENTS TABLE ({len(self.recipe_ingredients_df)} records):"
+                f"\nRECIPE-INGREDIENTS TABLE ({len(self.recipe_ingredients_df)} records):"
             )
             print(f"   Columns: {list(self.recipe_ingredients_df.columns)}")
 
@@ -187,8 +187,8 @@ class RealRecipeDataFetcher:
 
     def save_comprehensive_dataset(self):
         """Save all fetched data to CSV files."""
-        print("\n💾 SAVING COMPREHENSIVE DATASET")
-        print("=" * 40)
+        print("\nSaving comprehensive dataset")
+        print("-" * 40)
 
         files_saved = []
 
@@ -210,11 +210,11 @@ class RealRecipeDataFetcher:
             )
 
         if files_saved:
-            print("✅ Saved files:")
+            print("Saved files:")
             for file_info in files_saved:
                 print(f"   - {file_info}")
         else:
-            print("❌ No data to save")
+            print("No data to save")
 
         # Generate summary report
         summary_file = self.output_dir / "real_database_summary.txt"
@@ -250,15 +250,15 @@ class RealRecipeDataFetcher:
                     f"   Coverage: {unique_recipes} recipes, {unique_ingredients} ingredients\n"
                 )
 
-        print(f"📊 Summary saved to: {summary_file.name}")
+        print(f"Summary saved to: {summary_file.name}")
 
     def build_enhanced_features(self) -> pd.DataFrame:
         """Build enhanced recipe features from the real database."""
-        print("\n🚀 BUILDING ENHANCED RECIPE FEATURES")
-        print("=" * 50)
+        print("\nBuilding enhanced recipe features")
+        print("-" * 50)
 
         if self.recipes_df.empty:
-            print("❌ No recipe data available")
+            print("No recipe data available")
             return pd.DataFrame()
 
         # Start with recipe base data
@@ -310,29 +310,29 @@ class RealRecipeDataFetcher:
             enhanced_recipes["complexity_score"] = np.mean(complexity_factors, axis=0)
 
         print(
-            f"✅ Enhanced {len(enhanced_recipes)} recipes with {len(enhanced_recipes.columns)} features"
+            f"Enhanced {len(enhanced_recipes)} recipes with {len(enhanced_recipes.columns)} features"
         )
 
         # Save enhanced features
         enhanced_recipes.to_csv(
             self.output_dir / "enhanced_recipe_features_from_db.csv", index=False
         )
-        print("💾 Saved enhanced features to: enhanced_recipe_features_from_db.csv")
+        print("Saved enhanced features to: enhanced_recipe_features_from_db.csv")
 
         return enhanced_recipes
 
 
 def main():
     """Main function to fetch and analyze real recipe data."""
-    print("🚀 FETCHING REAL PANTRYPAL RECIPE DATA")
-    print("=" * 70)
+    print("Fetching real PantryPal recipe data")
+    print("-" * 70)
 
     try:
         # Initialize fetcher with service role for admin access
         fetcher = RealRecipeDataFetcher(use_service_role=True)
 
         # Fetch all data
-        print("📱 Connecting to PantryPal staging database...")
+        print("Connecting to PantryPal staging database...")
 
         recipes_df = fetcher.fetch_recipes()
         ingredients_df = fetcher.fetch_ingredients()
@@ -348,14 +348,14 @@ def main():
         # Build enhanced features
         fetcher.build_enhanced_features()
 
-        print("\n🎉 SUCCESS! Comprehensive recipe data extracted:")
+        print("\nComprehensive recipe data extracted:")
         print(f"   - {len(recipes_df)} recipes with full metadata")
         print(f"   - {len(ingredients_df)} ingredients")
         print(f"   - {len(recipe_ingredients_df)} recipe-ingredient relationships")
         print("   - Enhanced feature set ready for ML model")
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         print("Make sure you're connected to the staging database")
 
 

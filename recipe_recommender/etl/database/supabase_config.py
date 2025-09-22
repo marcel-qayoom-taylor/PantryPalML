@@ -2,18 +2,17 @@
 """
 Supabase Configuration and Client Setup
 
-This module handles Supabase connection and authentication.
-Set up your environment variables or create a .env file with:
-
-SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_ANON_KEY=your-anon-key-here
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+This module handles Supabase connection and authentication. See README.md
+"Supabase Setup" section for environment variables and instructions.
 """
 
 import os
 
 from dotenv import load_dotenv
 from supabase import Client, create_client
+from recipe_recommender.utils import setup_logging
+
+logger = setup_logging(__name__)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -57,45 +56,31 @@ class SupabaseConfig:
             client = self.get_client()
             # Try to access a basic endpoint
             (client.table("recipe").select("count", count="exact").limit(1).execute())
-            print("✅ Supabase connection successful!")
+            logger.info("Supabase connection successful")
             return True
-        except Exception as e:
-            print(f"❌ Supabase connection failed: {e}")
+        except Exception:
+            logger.exception("Supabase connection failed")
             return False
 
     @staticmethod
     def setup_instructions():
-        """Print setup instructions for the user."""
-        print("🔧 SUPABASE SETUP INSTRUCTIONS")
-        print("=" * 50)
-        print("1. Go to your Supabase project dashboard")
-        print("2. Navigate to Settings > API")
-        print("3. Copy the following values:")
-        print("   - Project URL")
-        print("   - anon/public key")
-        print("   - service_role key (optional, for admin access)")
-        print()
-        print("4. Set environment variables or create a .env file:")
-        print("   SUPABASE_URL=https://your-project-id.supabase.co")
-        print("   SUPABASE_ANON_KEY=your-anon-key-here")
-        print("   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here")
-        print()
-        print("5. Test the connection by running:")
-        print("   python ml_etl/database/supabase_config.py")
+        """Deprecated: See README.md for setup steps."""
+        logger.info(
+            "See README.md 'Supabase Setup' for environment variable instructions"
+        )
 
 
 def main():
     """Test the Supabase configuration."""
     try:
         config = SupabaseConfig()
-        print("🔧 Testing Supabase configuration...")
+        logger.info("Testing Supabase configuration")
         config.test_connection()
     except ValueError as e:
-        print(f"❌ Configuration error: {e}")
-        print()
+        logger.error(f"Configuration error: {e}")
         SupabaseConfig.setup_instructions()
-    except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+    except Exception:
+        logger.exception("Unexpected error during Supabase configuration test")
 
 
 if __name__ == "__main__":
