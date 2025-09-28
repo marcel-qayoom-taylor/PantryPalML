@@ -248,7 +248,7 @@ class ProductionRecipeScorer:
         self,
         user_interactions: list[dict],
         n_recommendations: int = 20,
-        min_score: float = 0.0,
+        min_score: float | None = None,
     ) -> list[dict]:
         """
         Score all available recipes for a user based on their interaction history.
@@ -259,7 +259,7 @@ class ProductionRecipeScorer:
         Args:
             user_interactions: List of user's recipe interactions
             n_recommendations: Number of top recommendations to return
-            min_score: Minimum score threshold for recommendations
+            min_score: Optional minimum score threshold for recommendations
 
         Returns:
             List of ranked recipe recommendations with scores and metadata
@@ -310,7 +310,7 @@ class ProductionRecipeScorer:
         for idx, recipe in self.recipe_features.iterrows():
             score = float(scores[idx])
 
-            if score >= min_score:
+            if (min_score is None) or (score >= min_score):
                 rec = {
                     "recipe_id": str(recipe["recipe_id"]),
                     "recipe_name": recipe.get("recipe_name", "Unknown"),
@@ -335,7 +335,12 @@ class ProductionRecipeScorer:
 
         logger.info(f"Generated scores for {len(self.recipe_features)} recipes")
         logger.info(f"   Score range: {np.min(scores):.4f} - {np.max(scores):.4f}")
-        logger.info(f"   Above threshold ({min_score}): {len(recommendations)} recipes")
+        if min_score is not None:
+            logger.info(
+                f"   Above threshold ({min_score}): {len(recommendations)} recipes"
+            )
+        else:
+            logger.info("   No threshold; selecting by top-N")
         logger.info(
             f"   Returning top {min(n_recommendations, len(recommendations))} recommendations"
         )
@@ -392,7 +397,7 @@ class ProductionRecipeScorer:
         start_time = datetime.now()
 
         recommendations = self.score_all_recipes_for_user(
-            interaction_history, n_recommendations=n_recommendations, min_score=0.0
+            interaction_history, n_recommendations=n_recommendations, min_score=None
         )
 
         processing_time = (datetime.now() - start_time).total_seconds()
