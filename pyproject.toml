@@ -20,7 +20,6 @@ dev = ["ruff>=0.12.11"]
 
 [project.scripts]
 etl = "recipe_recommender.etl.events.event_transformation:main"
-gbm-tune = "recipe_recommender.tuning.tune_gbm:main"
 
 [tool.uv]
 package = true

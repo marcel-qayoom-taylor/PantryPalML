@@ -164,14 +164,11 @@ async def get_recommendations(user_id: str, interactions: List[Dict]):
 
 ## 📊 Model Performance
 
-- **AUC**: 99.92% (near-perfect discrimination)
-- **Precision**: 99.01% (very few false positives)  
-- **Recall**: 96.14% (catches most relevant recipes)
-- **F1-Score**: 97.55% (excellent overall performance)
-- **NDCG@5**: 62.18% (good ranking quality)
+- **NDCG@5**: 62.18%
+- **Recall@5**: 
 
 **Training Data:**
-- 20,730 user-recipe pairs (831 users × 4,117 recipes)
+- 20,730 user-recipe pairs (831 users & 4,117 recipes)
 - 22 engineered features combining user behavior + recipe content
 - Temporal train/validation/test split
 
