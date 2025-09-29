@@ -233,6 +233,8 @@ class HybridGBMRecommender:
             "bagging_fraction": self.config.bagging_fraction,
             "bagging_freq": self.config.bagging_freq,
             "min_child_samples": self.config.min_child_samples,
+            "lambda_l1": getattr(self.config, "lambda_l1", 0.0),
+            "lambda_l2": getattr(self.config, "lambda_l2", 0.0),
             "random_state": self.config.random_state,
             "verbosity": -1,
         }

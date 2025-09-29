@@ -7,6 +7,7 @@ and easier to understand for beginners.
 """
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 
 
@@ -66,6 +67,8 @@ class MLConfig:
     bagging_fraction: float = 0.8
     bagging_freq: int = 5
     min_child_samples: int = 20
+    lambda_l1: float = 0.0
+    lambda_l2: float = 0.0
     max_boost_rounds: int = 1000
     early_stopping_rounds: int = 50
     # Ranking evaluation cutoffs (used by Lambdarank)
@@ -113,13 +116,37 @@ def get_ml_config() -> MLConfig:
     # Set up all paths relative to project root
     recipe_recommender_dir = project_root / "recipe_recommender"
 
-    return MLConfig(
+    config = MLConfig(
         project_root=project_root,
         output_dir=recipe_recommender_dir / "output",
         input_dir=recipe_recommender_dir / "input",
         model_dir=recipe_recommender_dir / "output" / "hybrid_models",
         text_encoding=TextEncodingConfig(),
     )
+
+    # Apply tuned best params if available
+    try:
+        best_params_path = config.model_dir / "best_params.json"
+        if best_params_path.exists():
+            data = json.loads(best_params_path.read_text())
+            params = data.get("params", {})
+            for key in [
+                "learning_rate",
+                "num_leaves",
+                "min_child_samples",
+                "feature_fraction",
+                "bagging_fraction",
+                "bagging_freq",
+                "lambda_l1",
+                "lambda_l2",
+            ]:
+                if key in params and hasattr(config, key):
+                    setattr(config, key, params[key])
+    except Exception:
+        # Best params loading is optional; ignore errors
+        pass
+
+    return config
 
 
 def get_feature_columns_to_exclude() -> list:

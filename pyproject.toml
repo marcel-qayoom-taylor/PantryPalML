@@ -12,6 +12,7 @@ dependencies = [
     "scikit-learn>=1.7.1",
     "seaborn>=0.13.2",
     "supabase>=2.18.1",
+    "optuna>=3.6.1",
 ]
 
 [project.optional-dependencies]
@@ -19,6 +20,7 @@ dev = ["ruff>=0.12.11"]
 
 [project.scripts]
 etl = "recipe_recommender.etl.events.event_transformation:main"
+gbm-tune = "recipe_recommender.tuning.tune_gbm:main"
 
 [tool.uv]
 package = true
