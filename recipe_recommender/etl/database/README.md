@@ -31,7 +31,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ### 3. Test Connection
 
 ```bash
-cd ml_etl/database
+cd recipe_recommender/etl/database
 python supabase_config.py
 ```
 
@@ -92,9 +92,9 @@ raw_ingredients = dataset['ingredients']
 ### Integration with ML Pipeline
 ```python
 # The fetched data automatically integrates with the ML pipeline
-from recipe_recommender.models.hybrid_recommendation_data_builder import HybridRecommendationDataBuilder
+from recipe_recommender.models.training_data_builder import TrainingDataBuilder
 
-builder = HybridRecommendationDataBuilder()
+builder = TrainingDataBuilder()
 train_data, val_data, test_data = builder.prepare_training_data()
 ```
 
@@ -157,13 +157,13 @@ Make sure your database schema matches the expected structure. The system will s
 
 ```bash
 # Test Supabase connection
-python ml_etl/database/supabase_config.py
+python recipe_recommender/etl/database/supabase_config.py
 
 # Fetch latest recipe data
-python ml_etl/database/fetch_real_recipes.py
+python recipe_recommender/etl/database/fetch_real_recipes.py
 ```
 
-This will create several output files in `ml_etl/output/`:
+This will create several output files in `recipe_recommender/output/`:
 - `real_*_from_db.csv` - Raw data from Supabase  
 - `enhanced_recipe_features_from_db.csv` - Comprehensive recipe features
 - `real_database_summary.txt` - Database summary and statistics

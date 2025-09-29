@@ -1,10 +1,10 @@
 # Recipe Recommendation ML Pipeline
 
-This module contains the complete machine learning pipeline for PantryPal's hybrid recipe recommendation system.
+This module contains the complete machine learning pipeline for PantryPal's recipe recommendation system.
 
 ## 🎯 System Overview
 
-A production-ready recommendation system that combines:
+A recommendation system that combines:
 - **User interaction history** from analytics events
 - **Rich recipe metadata** from Supabase database  
 - **Hybrid GBM model** (LightGBM) for scoring and ranking
@@ -28,10 +28,10 @@ ml_etl/
 
 ### Getting Recommendations (Production)
 ```python
-from recipe_recommender.inference.production_recipe_scorer import ProductionRecipeScorer
+from recipe_recommender.inference.recipe_scorer import RecipeScorer
 
-scorer = ProductionRecipeScorer()
-recommendations = scorer.get_user_recipe_recommendations(
+scorer = RecipeScorer()
+recommendations = scorer.get_user_recommendations(
     user_id="user123",
     interaction_history=[
         {"recipe_id": "100", "event_type": "Recipe Cooked", "timestamp": 1755666000}
@@ -52,8 +52,8 @@ config.learning_rate = 0.05
 config.negative_sampling_ratio = 3
 
 # Use with models
-from recipe_recommender.models.hybrid_gbm_recommender import HybridGBMRecommender
-recommender = HybridGBMRecommender(config=config)
+from recipe_recommender.models.recipe_ranker import RecipeRanker
+recommender = RecipeRanker(config=config)
 ```
 
 ### Retraining Pipeline
@@ -62,13 +62,13 @@ recommender = HybridGBMRecommender(config=config)
 python recipe_recommender/etl/database/fetch_real_recipes.py
 
 # 2. Build training dataset
-python recipe_recommender/models/hybrid_recommendation_data_builder.py
+python recipe_recommender/models/training_data_builder.py
 
 # 3. Train model
-python recipe_recommender/models/hybrid_gbm_recommender.py
+python recipe_recommender/models/recipe_ranker.py
 
 # 4. Test updated model
-python recipe_recommender/inference/production_recipe_scorer.py
+python recipe_recommender/inference/recipe_scorer.py
 ```
 
 ## 📊 Key Components
@@ -82,13 +82,13 @@ python recipe_recommender/inference/production_recipe_scorer.py
 - **`fetch_real_recipes.py`**: Extract complete recipe catalog
 
 ### Model Training (`models/`)  
-- **`hybrid_recommendation_data_builder.py`**: Build training dataset with config support
-- **`hybrid_gbm_recommender.py`**: Train LightGBM model with improved architecture
+- **`training_data_builder.py`**: Build training dataset with config support
+- **`recipe_ranker.py`**: Train LightGBM model with improved architecture
 
 ### Production API (`inference/`)
-- **`production_recipe_scorer.py`**: Real-time recommendation scoring with config
+- **`recipe_scorer.py`**: Real-time recommendation scoring with config
 
-### Data Processing (`transformations/`)
+### Data Processing (`etl/events/`)
 - **`event_transformation.py`**: Process user interaction events
 - **`helpers.py`**: Utility functions for data cleaning
 

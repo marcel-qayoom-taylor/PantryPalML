@@ -317,13 +317,11 @@ def main():
                     print(f"   ... and {len(interactions) - 10} more interactions")
 
                 print("\nTo save to file, use: --output interactions.json")
-                print("To use with inference, pass this list to ProductionRecipeScorer")
+                print("To use with inference, pass this list to RecipeScorer")
 
     except Exception:
         logger.exception("Error fetching user interactions")
         return 1
-
-    return 0
 
 
 if __name__ == "__main__":

@@ -14,8 +14,8 @@ Usage:
 import argparse
 import json
 
-from recipe_recommender.utils.fetch_user_interactions import UserInteractionFetcher
-from recipe_recommender.inference.production_recipe_scorer import ProductionRecipeScorer
+from recipe_recommender.etl.fetch_user_interactions import UserInteractionFetcher
+from recipe_recommender.inference.recipe_scorer import RecipeScorer
 from recipe_recommender.utils import setup_logging, configure_logging
 
 logger = setup_logging(__name__)
@@ -43,9 +43,9 @@ def run_inference_for_user(user_id: str, n_recommendations: int = 10) -> dict:
         logger.warning("No recipe interactions found for this user")
         logger.info("   Will use default user profile for recommendations")
 
-    # Step 2: Initialize the production scorer
+    # Step 2: Initialize the scorer
     logger.info("Step 2: Loading trained model")
-    scorer = ProductionRecipeScorer()
+    scorer = RecipeScorer()
 
     # Step 3: Get recommendations
     logger.info(f"Step 3: Generating {n_recommendations} recommendations")

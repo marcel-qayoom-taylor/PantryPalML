@@ -8,13 +8,13 @@ This guide shows you how to run recipe recommendations for users using their his
 
 ```bash
 # Get a summary of user activity
-python -m recipe_recommender.utils.fetch_user_interactions 123a02b5-cac8-4d1b-973e-3a9fe0f2303d --summary
+python -m recipe_recommender.etl.fetch_user_interactions 123a02b5-cac8-4d1b-973e-3a9fe0f2303d --summary
 
 # Get detailed interactions
-python -m recipe_recommender.utils.fetch_user_interactions 123a02b5-cac8-4d1b-973e-3a9fe0f2303d
+python -m recipe_recommender.etl.fetch_user_interactions 123a02b5-cac8-4d1b-973e-3a9fe0f2303d
 
 # Save interactions to a file
-python -m recipe_recommender.utils.fetch_user_interactions 123a02b5-cac8-4d1b-973e-3a9fe0f2303d --output user_interactions.json
+python -m recipe_recommender.etl.fetch_user_interactions 123a02b5-cac8-4d1b-973e-3a9fe0f2303d --output user_interactions.json
 ```
 
 ### 2. Run Complete Inference Pipeline
@@ -100,15 +100,15 @@ Recipes are ranked by score and returned with metadata including:
 ## Programmatic Usage
 
 ```python
-from recipe_recommender.utils.fetch_user_interactions import UserInteractionFetcher
-from recipe_recommender.inference.production_recipe_scorer import ProductionRecipeScorer
+from recipe_recommender.etl.fetch_user_interactions import UserInteractionFetcher
+from recipe_recommender.inference.recipe_scorer import RecipeScorer
 
 # Fetch user interactions
 fetcher = UserInteractionFetcher()
 interactions = fetcher.fetch_user_interactions("123a02b5-cac8-4d1b-973e-3a9fe0f2303d")
 
 # Get recommendations
-scorer = ProductionRecipeScorer()
+scorer = RecipeScorer()
 result = scorer.get_user_recipe_recommendations(
     user_id="123a02b5-cac8-4d1b-973e-3a9fe0f2303d",
     interaction_history=interactions,

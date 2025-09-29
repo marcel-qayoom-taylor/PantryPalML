@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Production Recipe Scorer API
+Recipe Scorer API
 
 This API takes a user's interaction history and scores/ranks all available recipes
-using the trained hybrid GBM model. It provides real-time recipe recommendations
+using the trained GBM model. It provides real-time recipe recommendations
 based on learned user preferences and rich recipe content features.
 """
 
@@ -12,7 +12,6 @@ from datetime import datetime
 from pathlib import Path
 
 import lightgbm as lgb
-import joblib
 import numpy as np
 import pandas as pd
 
@@ -23,9 +22,9 @@ warnings.filterwarnings("ignore")
 logger = setup_logging(__name__)
 
 
-class ProductionRecipeScorer:
+class RecipeScorer:
     """
-    Production API for scoring and ranking recipes for users.
+    API for scoring and ranking recipes for users.
 
     This class loads a trained ML model and uses it to
     score recipes for users based on their interaction history.
@@ -33,7 +32,7 @@ class ProductionRecipeScorer:
 
     def __init__(self, config=None, model_path: str | None = None):
         """
-        Initialize the production recipe scorer.
+        Initialize the recipe scorer.
 
         Args:
             config: ML configuration object (uses defaults if None)
@@ -51,7 +50,7 @@ class ProductionRecipeScorer:
         self.recipe_features: pd.DataFrame = pd.DataFrame()
         self.user_profiles: dict = {}  # Cache user profiles
 
-        logger.info("Initializing Production Recipe Scorer")
+        logger.info("Initializing Recipe Scorer")
 
         # Load model and data
         self._load_model_components()
@@ -88,7 +87,7 @@ class ProductionRecipeScorer:
             else:
                 logger.warning("Metadata file not found, using default feature columns")
 
-        except Exception as e:
+        except Exception:
             logger.exception("Error loading model")
             raise
 
@@ -145,11 +144,11 @@ class ProductionRecipeScorer:
                         f"Expected: {expected_file}. Re-run training data builder "
                         "with text features enabled or copy the encoded CSV to the output directory."
                     )
-            except Exception as e:
+            except Exception:
                 # Surface clear error to caller
                 raise
 
-        except Exception as e:
+        except Exception:
             logger.exception("Error loading recipe data")
             raise
 
@@ -418,15 +417,15 @@ class ProductionRecipeScorer:
 
 def demo_usage():
     """
-    Demonstrate how to use the production recipe scorer.
+    Demonstrate how to use the recipe scorer.
 
     This shows a complete example of how to get
     recipe recommendations for a user.
     """
-    logger.info("Demo: Production Recipe Scorer Usage")
+    logger.info("Demo: Recipe Scorer Usage")
 
     # Initialize the scorer
-    scorer = ProductionRecipeScorer()
+    scorer = RecipeScorer()
 
     # Example user interaction history
     sample_interactions = [
@@ -479,17 +478,17 @@ def api_example():
 
     This shows how to integrate the scorer into a web API.
     """
-    logger.info("Production API example")
+    logger.info("API example")
 
     logger.info(
         """
 # Example FastAPI endpoint:
 
 from fastapi import FastAPI
-from production_recipe_scorer import ProductionRecipeScorer
+from recipe_scorer import RecipeScorer
 
 app = FastAPI()
-scorer = ProductionRecipeScorer()
+scorer = RecipeScorer()
 
 @app.post("/recommendations")
 async def get_recommendations(user_id: str, interactions: List[Dict]):
@@ -518,11 +517,11 @@ async def get_recommendations(user_id: str, interactions: List[Dict]):
 
 def main():
     """
-    Main function to test the production recipe scorer.
+    Main function to test the recipe scorer.
 
     This runs a complete test of the recommendation system.
     """
-    logger.info("Production Recipe Scorer test")
+    logger.info("Recipe Scorer test")
 
     try:
         # Run demo
@@ -531,15 +530,15 @@ def main():
         # Show API example
         api_example()
 
-        logger.info("Production Recipe Scorer is ready")
+        logger.info("Recipe Scorer is ready")
         logger.info("   Supports scoring for any user in real-time")
         logger.info("   Handles user interaction history")
         logger.info("   Returns ranked recommendations with metadata")
         logger.info("   Ready for integration into production API")
 
-    except Exception as e:
-        logger.exception("Error running Production Recipe Scorer")
-        logger.error("Make sure the hybrid model has been trained first")
+    except Exception:
+        logger.exception("Error running Recipe Scorer")
+        logger.error("Make sure the model has been trained first")
 
 
 if __name__ == "__main__":

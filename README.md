@@ -1,6 +1,6 @@
 # PantryPal Recipe Recommendation System
 
-A production-ready hybrid gradient boosted model (GBM) that combines user interaction history with rich recipe content features to provide personalized recipe recommendations.
+A gradient boosted model (GBM) that combines user interaction history with rich recipe content features to provide personalized recipe recommendations.
 
 ## ☁️ Cloud-Executable Demo (A2/A3 Submission)
 
@@ -91,10 +91,10 @@ export SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 ### 2. Get Recipe Recommendations
 ```python
-from recipe_recommender.inference.production_recipe_scorer import ProductionRecipeScorer
+from recipe_recommender.inference.recipe_scorer import RecipeScorer
 
 # Initialize the scorer (loads trained model automatically)
-scorer = ProductionRecipeScorer()
+scorer = RecipeScorer()
 
 # User's interaction history
 user_interactions = [
@@ -104,7 +104,7 @@ user_interactions = [
 ]
 
 # Get personalized recommendations
-recommendations = scorer.get_user_recipe_recommendations(
+recommendations = scorer.get_user_recommendations(
     user_id="user123",
     interaction_history=user_interactions,
     n_recommendations=10
@@ -141,21 +141,21 @@ cfg.name_encoding = "hashing"         # small dim hashing for recipe name
 
 
 # Use custom config
-from recipe_recommender.models.hybrid_gbm_recommender import HybridGBMRecommender
-recommender = HybridGBMRecommender(config=config)
+from recipe_recommender.models.recipe_ranker import RecipeRanker
+recommender = RecipeRanker(config=config)
 ```
 
 ### 4. Integration Example (FastAPI)
 ```python
 from fastapi import FastAPI
-from recipe_recommender.inference.production_recipe_scorer import ProductionRecipeScorer
+from recipe_recommender.inference.recipe_scorer import RecipeScorer
 
 app = FastAPI()
-scorer = ProductionRecipeScorer()
+scorer = RecipeScorer()
 
 @app.post("/recommendations")
 async def get_recommendations(user_id: str, interactions: List[Dict]):
-    return scorer.get_user_recipe_recommendations(
+    return scorer.get_user_recommendations(
         user_id=user_id,
         interaction_history=interactions,
         n_recommendations=20
@@ -201,26 +201,25 @@ dataset = fetcher.build_comprehensive_recipe_dataset()
 #### 3. Rebuild Training Dataset
 ```python
 # Rebuild training data with latest interactions + recipes
-from recipe_recommender.models.hybrid_recommendation_data_builder import HybridRecommendationDataBuilder
-builder = HybridRecommendationDataBuilder()
+from recipe_recommender.models.training_data_builder import TrainingDataBuilder
+builder = TrainingDataBuilder()
 train_data, val_data, test_data = builder.prepare_training_data()
 ```
 
 #### 4. Retrain Model
 ```python
 # Train new model
-from recipe_recommender.models.hybrid_gbm_recommender import HybridGBMRecommender
-recommender = HybridGBMRecommender(model_type='lightgbm')
-recommender.load_training_data()
-recommender.load_recipe_features()
-recommender.train_model()
+from recipe_recommender.models.recipe_ranker import RecipeRanker
+recommender = RecipeRanker()
+recommender.load_data()
+recommender.train()
 recommender.save_model()
 ```
 
 #### 5. Deploy Updated Model
 ```python
-# The ProductionRecipeScorer will automatically load the new model
-scorer = ProductionRecipeScorer()  # Loads latest trained model
+# The RecipeScorer will automatically load the new model
+scorer = RecipeScorer()  # Loads latest trained model
 ```
 
 ### Complete Retraining Script
@@ -232,13 +231,13 @@ cd /path/to/PantryPalUtils
 uv run python recipe_recommender/etl/database/fetch_real_recipes.py
 
 # 2. Rebuild training dataset  
-uv run python recipe_recommender/models/hybrid_recommendation_data_builder.py
+uv run python recipe_recommender/models/training_data_builder.py
 
 # 3. Train new model
-uv run python recipe_recommender/models/hybrid_gbm_recommender.py
+uv run python recipe_recommender/models/recipe_ranker.py
 
 # 4. Test the updated model
-uv run python recipe_recommender/inference/production_recipe_scorer.py
+uv run python recipe_recommender/inference/recipe_scorer.py
 ```
 
 ## 📁 Project Structure
@@ -259,10 +258,10 @@ recipe_recommender/
 │       ├── event_transformation.py # Process user interaction events
 │       └── helpers.py              # Utility functions
 ├── models/
-│   ├── hybrid_recommendation_data_builder.py  # Build training dataset
-│   └── hybrid_gbm_recommender.py   # 🔄 Improved train hybrid GBM model
+│   ├── training_data_builder.py    # Build training dataset
+│   └── recipe_ranker.py            # 🔄 Improved train hybrid GBM model
 ├── inference/
-│   └── production_recipe_scorer.py # 🔄 Enhanced production recommendation API
+│   └── recipe_scorer.py            # 🔄 Enhanced production recommendation API
 ├── analysis/
 │   ├── exploratory_data_analysis.py # Data exploration (reference)
 │   └── feature_engineering.py      # Feature engineering (reference)
@@ -354,22 +353,22 @@ The codebase includes extensive beginner-friendly documentation:
 ### Test the Model
 ```python
 # Quick test
-from recipe_recommender.inference.production_recipe_scorer import ProductionRecipeScorer
-scorer = ProductionRecipeScorer()
+from recipe_recommender.inference.recipe_scorer import RecipeScorer
+scorer = RecipeScorer()
 
 # Test with sample interactions
 test_interactions = [
     {"recipe_id": "100", "event_type": "Recipe Cooked", "timestamp": 1755666000}
 ]
 
-result = scorer.get_user_recipe_recommendations("test_user", test_interactions)
+result = scorer.get_user_recommendations("test_user", test_interactions)
 print(f"Generated {len(result['recommendations'])} recommendations")
 ```
 
 ### Model Evaluation
 Run the evaluation script to check model performance:
 ```bash
-uv run python recipe_recommender/models/hybrid_gbm_recommender.py
+uv run python recipe_recommender/models/recipe_ranker.py
 ```
 
 ## 📈 Monitoring and Maintenance
@@ -405,7 +404,7 @@ uv run python recipe_recommender/models/hybrid_gbm_recommender.py
 ### Common Issues
 
 **"No model found"**
-- Make sure you've run the training pipeline: `hybrid_recommendation_data_builder.py` → `hybrid_gbm_recommender.py`
+- Make sure you've run the training pipeline: `training_data_builder.py` → `recipe_ranker.py`
 
 **"No recipe data"**  
 - Verify Supabase connection: `python recipe_recommender/etl/database/supabase_config.py`

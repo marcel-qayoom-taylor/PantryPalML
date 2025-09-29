@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Hybrid Recommendation Data Builder
+Training Data Builder
 
 This script combines user interaction history from events with the rich recipe
-database to create training data for a hybrid recommendation model that can
+database to create training data for a recommendation model that can
 score and rank recipes based on user preferences.
 """
 
@@ -31,7 +31,7 @@ warnings.filterwarnings("ignore")
 logger = setup_logging(__name__)
 
 
-class HybridRecommendationDataBuilder:
+class TrainingDataBuilder:
     """
     Build training data combining user interactions with rich recipe features.
 
@@ -54,7 +54,7 @@ class HybridRecommendationDataBuilder:
         self.recipe_ingredients: pd.DataFrame = pd.DataFrame()
         self.ingredients: pd.DataFrame = pd.DataFrame()
 
-        logger.info("Initialized Hybrid Recommendation Data Builder")
+        logger.info("Initialized Training Data Builder")
 
     # ------------------------------
     # Text encoding helpers
@@ -518,6 +518,90 @@ class HybridRecommendationDataBuilder:
         logger.error("No interactions found")
         return False
 
+    def map_recipe_ids_to_latest(self) -> bool:
+        """
+        Map v1 recipe IDs to their corresponding v2 recipe IDs using the mapping file.
+
+        This ensures consistent recipe identifiers across v1 and v2 datasets,
+        using v2 recipe IDs as the canonical identifiers.
+
+        Returns:
+            bool: True if successful, False if mapping file not found
+        """
+        if self.user_interactions.empty:
+            logger.warning("No user interactions to map")
+            return True
+
+        # Load the recipe ID mapping
+        mapping_file = self.config.output_dir / "recipe_id_mapping_v1_v2.json"
+        if not mapping_file.exists():
+            logger.warning(
+                f"Recipe ID mapping file not found at {mapping_file}. Skipping recipe ID mapping."
+            )
+            logger.warning(
+                "Run analyze_recipe_duplicates.py first to generate the mapping."
+            )
+            return True
+
+        logger.info("Loading recipe ID mapping to standardize v1/v2 recipe IDs")
+
+        try:
+            with open(mapping_file) as f:
+                mapping_data = json.load(f)
+
+            # Create a dictionary mapping v1 recipe IDs to v2 recipe IDs
+            v1_to_v2_mapping = {
+                item["v1_recipe_id"]: item["v2_recipe_id"] for item in mapping_data
+            }
+
+            logger.info(f"Loaded mapping for {len(v1_to_v2_mapping)} recipe ID pairs")
+
+            # Count interactions before mapping
+            v1_interactions_before = len(
+                self.user_interactions[self.user_interactions["version"] == "v1"]
+            )
+
+            # Apply mapping to v1 interactions
+            v1_mask = self.user_interactions["version"] == "v1"
+            v1_interactions = self.user_interactions[v1_mask].copy()
+
+            # Map v1 recipe IDs to v2 recipe IDs where mapping exists
+            mapped_recipe_ids = v1_interactions["recipe_id"].map(v1_to_v2_mapping)
+            mapped_count = mapped_recipe_ids.notna().sum()
+
+            # Update recipe IDs for mapped recipes
+            self.user_interactions.loc[v1_mask, "recipe_id"] = mapped_recipe_ids.fillna(
+                v1_interactions["recipe_id"]
+            )
+
+            # Update the version for successfully mapped interactions
+            mapped_mask = v1_mask & mapped_recipe_ids.notna()
+            self.user_interactions.loc[mapped_mask, "version"] = "v1_mapped_to_v2"
+
+            logger.info(f"Recipe ID mapping results:")
+            logger.info(f"   v1 interactions processed: {v1_interactions_before}")
+            logger.info(f"   Successfully mapped to v2 IDs: {mapped_count}")
+            logger.info(
+                f"   Unmapped v1 interactions: {v1_interactions_before - mapped_count}"
+            )
+
+            # Log final recipe distribution
+            unique_recipes_after = self.user_interactions["recipe_id"].nunique()
+            logger.info(
+                f"   Total unique recipe IDs after mapping: {unique_recipes_after}"
+            )
+
+            version_counts = self.user_interactions["version"].value_counts()
+            for version, count in version_counts.items():
+                logger.info(f"   {version} interactions: {count}")
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Error loading or applying recipe ID mapping: {e}")
+            logger.warning("Continuing without recipe ID mapping")
+            return False
+
     def create_user_profiles(self) -> pd.DataFrame:
         """
         Create user profile features from interaction history.
@@ -807,7 +891,7 @@ class HybridRecommendationDataBuilder:
         Returns:
             Tuple of (train_data, val_data, test_data) or (None, None, None) if failed
         """
-        logger.info("Preparing training data for hybrid recommendation model")
+        logger.info("Preparing training data for recommendation model")
 
         # Load all data
         if not self.load_real_recipe_data():
@@ -815,6 +899,10 @@ class HybridRecommendationDataBuilder:
 
         if not self.extract_user_interactions_from_events():
             return None, None, None
+
+        # Map v1 recipe IDs to v2 recipe IDs for consistency
+        if not self.map_recipe_ids_to_latest():
+            logger.warning("Recipe ID mapping failed, continuing with original IDs")
 
         # Create user profiles
         user_profiles = self.create_user_profiles()
@@ -1043,24 +1131,24 @@ class HybridRecommendationDataBuilder:
 
 def main():
     """
-    Main function to build hybrid recommendation training data.
+    Main function to build recommendation training data.
 
     This runs the complete data preparation pipeline
     from raw events to ML-ready training datasets.
     """
-    logger.info("Hybrid recommendation data builder")
+    logger.info("Training data builder")
 
-    builder = HybridRecommendationDataBuilder()
+    builder = TrainingDataBuilder()
 
     train_data, val_data, test_data = builder.prepare_training_data()
 
     if train_data is not None:
-        logger.info("Hybrid recommendation training data ready:")
+        logger.info("Training data ready:")
         logger.info("   - Combined user interactions with recipe features")
         logger.info(
             f"   - {len(train_data) + len(val_data) + len(test_data)} total training samples"
         )
-        logger.info("   - Ready for GBM training to score and rank recipes")
+        logger.info("   - Ready for model training to score and rank recipes")
 
         # Show feature summary
         feature_columns = [

@@ -38,17 +38,17 @@ etl-transform: ## Transform raw event data
 	@echo "🔄 Running ETL transformation..."
 	uv run python -m recipe_recommender.etl.events.event_transformation
 
-train-data: ## Build hybrid training data
-	@echo "📊 Building hybrid training dataset..."
-	uv run python -m recipe_recommender.models.hybrid_recommendation_data_builder
+train-data: ## Build training data
+	@echo "📊 Building training dataset..."
+	uv run python -m recipe_recommender.models.training_data_builder
 
-train-model: ## Train the hybrid GBM recommendation model
-	@echo "🚀 Training hybrid GBM model..."
-	uv run python -m recipe_recommender.models.hybrid_gbm_recommender
+train-model: ## Train the recipe ranker model
+	@echo "🚀 Training recipe ranker..."
+	uv run python -m recipe_recommender.models.recipe_ranker
 
 score-recipes: ## Run recipe scoring inference
 	@echo "🍳 Running recipe scoring..."
-	uv run python -m recipe_recommender.inference.production_recipe_scorer
+	uv run python -m recipe_recommender.inference.recipe_scorer
 
 fetch-data: ## Fetch fresh data from Supabase database
 	@echo "📥 Fetching data from database..."
@@ -83,7 +83,7 @@ dev-check: check format ## Quick dev check (lint + format)
 # Hyperparameter tuning
 tune-model: ## Tune hyperparameters (optional - params are hardcoded)
 	@echo "🎯 Tuning hyperparameters..."
-	uv run python -m recipe_recommender.tuning.tune_gbm --trials 50 --early-stop 15
+	uv run python -m recipe_recommender.tuning.tune_ranker --trials 50 --early-stop 15
 
 all: clean install check train-data train-model ## Run everything from scratch
 	@echo "🎊 Full build complete!"
