@@ -293,10 +293,23 @@ class RecipeScorer:
         ]
         X_score = features_df[available_features]
 
-        # Fill any missing features with defaults
+        # Fill any missing features with defaults aligned to training-time handling
+        # Use sensible medians for common recipe fields to avoid collapsing variance
+        missing_value_defaults = {
+            "total_time": 40,
+            "servings": 4,
+            "ingredient_count": 8,
+            "unique_ingredients": 8,
+            "complexity_score": 0.5,
+            "ingredient_count_db": 8,
+        }
+
         for col in self.feature_columns:
             if col not in X_score.columns:
-                X_score[col] = 0  # Default value for missing features
+                X_score[col] = missing_value_defaults.get(col, 0)
+            else:
+                if col in missing_value_defaults:
+                    X_score[col] = X_score[col].fillna(missing_value_defaults[col])
 
         # Ensure correct column order
         X_score = X_score[self.feature_columns]

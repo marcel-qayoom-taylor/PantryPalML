@@ -172,6 +172,9 @@ def get_feature_columns_to_exclude() -> list:
         "last_interaction",
         "primary_device",
         "primary_platform",
+        # Drop prep_time and cook_time; DB provides only total_time
+        "prep_time",
+        "cook_time",
     ]
 
 
