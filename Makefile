@@ -80,5 +80,10 @@ clean: ## Clean generated files and caches
 dev-check: check format ## Quick dev check (lint + format)
 	@echo "✅ Development checks complete!"
 
+# Hyperparameter tuning
+tune-model: ## Tune hyperparameters (optional - params are hardcoded)
+	@echo "🎯 Tuning hyperparameters..."
+	uv run python -m recipe_recommender.tuning.tune_gbm --trials 50 --early-stop 15
+
 all: clean install check train-data train-model ## Run everything from scratch
 	@echo "🎊 Full build complete!"

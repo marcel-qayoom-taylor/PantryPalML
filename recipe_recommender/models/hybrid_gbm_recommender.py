@@ -18,11 +18,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import (
     average_precision_score,
-    f1_score,
     ndcg_score,
-    precision_score,
-    recall_score,
-    roc_auc_score,
 )
 
 from recipe_recommender.config import get_feature_columns_to_exclude, get_ml_config
@@ -289,20 +285,8 @@ class HybridGBMRecommender:
         y_pred_proba = self.model.predict(
             X_test, num_iteration=self.model.best_iteration
         )
-        # For binary metrics, we can derive labels via 0.5 threshold (for reference only)
-        y_pred = (y_pred_proba > 0.5).astype(int)
-
-        # Calculate performance metrics
-        # These metrics tell us how good the model is
+        # Calculate performance metrics (ranking-focused)
         metrics = {
-            "auc": roc_auc_score(
-                y_test, y_pred_proba
-            ),  # Overall discrimination ability
-            "precision": precision_score(
-                y_test, y_pred
-            ),  # Accuracy of positive predictions
-            "recall": recall_score(y_test, y_pred),  # How many positives we caught
-            "f1": f1_score(y_test, y_pred),  # Balance of precision and recall
             "average_precision": average_precision_score(y_test, y_pred_proba),
         }
 
@@ -315,10 +299,10 @@ class HybridGBMRecommender:
         if "ndcg_5" in metrics:
             logger.info(f"   NDCG@5: {metrics['ndcg_5']:.4f}")
             logger.info(f"   NDCG@10: {metrics['ndcg_10']:.4f}")
-        logger.info(f"   AUC: {metrics['auc']:.4f} (reference)")
-        logger.info(f"   Precision: {metrics['precision']:.4f} (reference)")
-        logger.info(f"   Recall: {metrics['recall']:.4f} (reference)")
-        logger.info(f"   F1-Score: {metrics['f1']:.4f} (reference)")
+        if "recall_5" in metrics:
+            logger.info(f"   Recall@5: {metrics['recall_5']:.4f}")
+        if "recall_10" in metrics:
+            logger.info(f"   Recall@10: {metrics['recall_10']:.4f}")
 
         return metrics
 

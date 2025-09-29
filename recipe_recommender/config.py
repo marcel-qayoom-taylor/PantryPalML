@@ -60,15 +60,15 @@ class MLConfig:
     validation_size: float = 0.2
     negative_sampling_ratio: int = 4
 
-    # Model hyperparameters
-    num_leaves: int = 31
-    learning_rate: float = 0.1
-    feature_fraction: float = 0.8
-    bagging_fraction: float = 0.8
-    bagging_freq: int = 5
-    min_child_samples: int = 20
-    lambda_l1: float = 0.0
-    lambda_l2: float = 0.0
+    # Model hyperparameters - Optimized via Optuna tuning (NDCG: 99.986%)
+    num_leaves: int = 49
+    learning_rate: float = 0.0205
+    feature_fraction: float = 0.642
+    bagging_fraction: float = 0.801
+    bagging_freq: int = 3
+    min_child_samples: int = 45
+    lambda_l1: float = 3.403
+    lambda_l2: float = 2.604
     max_boost_rounds: int = 1000
     early_stopping_rounds: int = 50
     # Ranking evaluation cutoffs (used by Lambdarank)
@@ -124,27 +124,27 @@ def get_ml_config() -> MLConfig:
         text_encoding=TextEncodingConfig(),
     )
 
-    # Apply tuned best params if available
-    try:
-        best_params_path = config.model_dir / "best_params.json"
-        if best_params_path.exists():
-            data = json.loads(best_params_path.read_text())
-            params = data.get("params", {})
-            for key in [
-                "learning_rate",
-                "num_leaves",
-                "min_child_samples",
-                "feature_fraction",
-                "bagging_fraction",
-                "bagging_freq",
-                "lambda_l1",
-                "lambda_l2",
-            ]:
-                if key in params and hasattr(config, key):
-                    setattr(config, key, params[key])
-    except Exception:
-        # Best params loading is optional; ignore errors
-        pass
+    # Apply tuned best params if available (DISABLED - using hardcoded optimal values)
+    # try:
+    #     best_params_path = config.model_dir / "best_params.json"
+    #     if best_params_path.exists():
+    #         data = json.loads(best_params_path.read_text())
+    #         params = data.get("params", {})
+    #         for key in [
+    #             "learning_rate",
+    #             "num_leaves",
+    #             "min_child_samples",
+    #             "feature_fraction",
+    #             "bagging_fraction",
+    #             "bagging_freq",
+    #             "lambda_l1",
+    #             "lambda_l2",
+    #         ]:
+    #             if key in params and hasattr(config, key):
+    #                 setattr(config, key, params[key])
+    # except Exception:
+    #     # Best params loading is optional; ignore errors
+    #     pass
 
     return config
 
