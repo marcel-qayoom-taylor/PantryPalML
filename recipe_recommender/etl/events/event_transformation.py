@@ -26,8 +26,8 @@ def load_events_to_dataframe(file_path, event_version):
                 event_data = json.loads(line)
                 props = event_data.get("properties", {})
 
-                # Skip development events for v2
-                if event_version == "v2" and props.get("is_development", True):
+                # Skip development events for v2; default to False if missing
+                if event_version == "v2" and props.get("is_development", False):
                     continue
 
                 # Extract common fields
