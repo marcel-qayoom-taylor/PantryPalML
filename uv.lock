@@ -999,6 +999,7 @@ dependencies = [
     { name = "pandas" },
     { name = "python-dotenv" },
     { name = "scikit-learn" },
+    { name = "scipy" },
     { name = "seaborn" },
     { name = "supabase" },
 ]
@@ -1025,6 +1026,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.11" },
     { name = "scikit-learn", specifier = ">=1.7.1" },
+    { name = "scipy", specifier = ">=1.14.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "supabase", specifier = ">=2.18.1" },
 ]

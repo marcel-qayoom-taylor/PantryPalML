@@ -677,30 +677,37 @@ class TrainingDataBuilder:
         self, negative_sampling_ratio: int | None = None
     ) -> pd.DataFrame:
         """
-        Create user-recipe pairs with positive and negative samples.
+        Create user-recipe pairs with engagement-weighted relevance scores.
 
-        This creates training examples by pairing users with recipes
-        they interacted with (positive) and recipes they haven't seen (negative).
+        This creates training examples by pairing users with recipes they interacted with,
+        using different relevance scores based on engagement type (view=1, cook=5, etc.)
+        and negative samples for recipes they haven't seen.
 
         Args:
             negative_sampling_ratio: How many negative samples per positive (uses config default)
 
         Returns:
-            DataFrame with user-recipe pairs and labels
+            DataFrame with user-recipe pairs and engagement-weighted labels
         """
         # Use config default if not specified
         if negative_sampling_ratio is None:
             negative_sampling_ratio = self.config.negative_sampling_ratio
 
-        logger.info("Creating user-recipe training pairs")
+        logger.info("Creating user-recipe training pairs with engagement weighting")
+
+        # Use engagement weights from config for consistency
+        engagement_weights = self.config.interaction_weights
 
         # Get all positive interactions (actual user-recipe pairs)
+        # For users with multiple interactions on same recipe, take the highest engagement
         positive_pairs = (
             self.user_interactions.groupby(["user_id", "recipe_id"])
             .agg(
                 {
                     "rating": "max",  # Take highest rating if multiple interactions
-                    "event_type": lambda x: x.iloc[-1],  # Most recent event type
+                    "event_type": lambda x: self._get_highest_engagement_event(
+                        x.tolist(), engagement_weights
+                    ),
                     "datetime": "max",  # Most recent interaction
                     "version": "first",
                 }
@@ -708,8 +715,22 @@ class TrainingDataBuilder:
             .reset_index()
         )
 
-        positive_pairs["label"] = 1
-        logger.info(f"Created {len(positive_pairs)} positive pairs")
+        # Apply engagement-based labeling
+        positive_pairs["label"] = positive_pairs["event_type"].map(
+            lambda event: engagement_weights.get(event, 1.0)
+        )
+
+        # Handle negative engagement signals (e.g., "Recipe Removed From Collections")
+        # Convert negative weights to very low positive weights to maintain ranking framework
+        positive_pairs.loc[positive_pairs["label"] < 0, "label"] = 0.1
+
+        logger.info(f"Created {len(positive_pairs)} engagement-weighted pairs")
+        logger.info(
+            f"   Engagement distribution: {positive_pairs['event_type'].value_counts().to_dict()}"
+        )
+        logger.info(
+            f"   Label distribution: {positive_pairs['label'].value_counts().to_dict()}"
+        )
 
         # Create negative samples
         logger.info("Generating negative samples")
@@ -771,6 +792,34 @@ class TrainingDataBuilder:
         )
 
         return all_pairs
+
+    def _get_highest_engagement_event(
+        self, event_list: list[str], engagement_weights: dict[str, float]
+    ) -> str:
+        """
+        From a list of events for the same user-recipe pair, return the highest engagement event.
+
+        Args:
+            event_list: List of event types for this user-recipe pair
+            engagement_weights: Mapping of event types to engagement scores
+
+        Returns:
+            Event type with highest engagement weight
+        """
+        if not event_list:
+            return "Recipe Viewed"  # Default fallback
+
+        # Find event with highest weight (most positive engagement)
+        highest_event = event_list[0]
+        highest_weight = engagement_weights.get(highest_event, 1.0)
+
+        for event in event_list:
+            weight = engagement_weights.get(event, 1.0)
+            if weight > highest_weight:
+                highest_weight = weight
+                highest_event = event
+
+        return highest_event
 
     def create_training_features(
         self, user_recipe_pairs: pd.DataFrame, user_profiles: pd.DataFrame

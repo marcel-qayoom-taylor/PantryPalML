@@ -13,8 +13,6 @@ interactions_per_day,Average interactions per active day,user,computed
 engagement_score,Interaction intensity per day,user,computed
 recipe_name,Recipe title,recipe,raw
 recipe_img,Recipe image URL,recipe,raw
-prep_time,Prep time (minutes),recipe,raw
-cook_time,Cook time (minutes),recipe,raw
 total_time,Total time (minutes),recipe,computed
 servings,Number of servings,recipe,raw
 author_name,Recipe author name,recipe,raw

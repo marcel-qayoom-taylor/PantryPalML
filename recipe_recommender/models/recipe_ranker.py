@@ -14,7 +14,6 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
-    average_precision_score,
     ndcg_score,
 )
 
@@ -208,12 +207,24 @@ class RecipeRanker:
             X_test, num_iteration=self.model.best_iteration
         )
 
-        metrics = {
-            "average_precision": average_precision_score(y_test, y_pred_proba),
-        }
+        # For graded relevance ranking, focus on ranking metrics rather than classification metrics
+        metrics = {}
 
+        # Evaluate ranking-specific metrics (NDCG, Recall@k)
         ranking_metrics = self._evaluate_ranking_metrics(y_test, y_pred_proba)
         metrics.update(ranking_metrics)
+
+        # Add basic correlation between predictions and labels
+        from scipy.stats import spearmanr, pearsonr
+
+        try:
+            spearman_corr, _ = spearmanr(y_test, y_pred_proba)
+            pearson_corr, _ = pearsonr(y_test, y_pred_proba)
+            metrics["spearman_correlation"] = spearman_corr
+            metrics["pearson_correlation"] = pearson_corr
+        except Exception:
+            # Handle edge cases gracefully
+            pass
 
         logger.info("Model performance:")
         if "ndcg_5" in metrics:
@@ -223,6 +234,10 @@ class RecipeRanker:
             logger.info(f"   Recall@5: {metrics['recall_5']:.4f}")
         if "recall_10" in metrics:
             logger.info(f"   Recall@10: {metrics['recall_10']:.4f}")
+        if "spearman_correlation" in metrics:
+            logger.info(
+                f"   Spearman Correlation: {metrics['spearman_correlation']:.4f}"
+            )
         return metrics
 
     def _evaluate_ranking_metrics(self, y_true, y_pred_proba) -> dict:

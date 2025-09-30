@@ -288,23 +288,18 @@ class RealRecipeDataFetcher:
         # Skip category diversity for now (categories are stored as lists)
         # Could be added later by flattening the category lists
 
-        # Create complexity score
+        # Create complexity score using only ingredient_count and total_time
         complexity_factors = []
 
         if "ingredient_count" in enhanced_recipes.columns:
             complexity_factors.append(enhanced_recipes["ingredient_count"] / 20)
 
-        if "cook_time" in enhanced_recipes.columns:
-            enhanced_recipes["cook_time"] = pd.to_numeric(
-                enhanced_recipes["cook_time"], errors="coerce"
+        # Total time is total time it takes to make the recipe
+        if "total_time" in enhanced_recipes.columns:
+            enhanced_recipes["total_time"] = pd.to_numeric(
+                enhanced_recipes["total_time"], errors="coerce"
             )
-            complexity_factors.append(enhanced_recipes["cook_time"].fillna(30) / 60)
-
-        if "prep_time" in enhanced_recipes.columns:
-            enhanced_recipes["prep_time"] = pd.to_numeric(
-                enhanced_recipes["prep_time"], errors="coerce"
-            )
-            complexity_factors.append(enhanced_recipes["prep_time"].fillna(15) / 60)
+            complexity_factors.append(enhanced_recipes["total_time"].fillna(40) / 60)
 
         if complexity_factors:
             enhanced_recipes["complexity_score"] = np.mean(complexity_factors, axis=0)
