@@ -4,32 +4,27 @@ avg_rating,"Average engagement score per interaction event (Viewed=1.0, Clicked=
 total_rating,Sum of interaction weights,user,computed
 rating_std,Std dev of interaction weights,user,computed
 unique_recipes,Distinct recipes interacted with,user,computed
-first_interaction,Timestamp of first interaction,user,computed
-last_interaction,Timestamp of latest interaction,user,computed
-primary_device,Most common device type,user,computed
-primary_platform,Most common OS/platform,user,computed
 activity_days,Days active between first and last interaction,user,computed
 interactions_per_day,Average interactions per active day,user,computed
 engagement_score,Interaction intensity per day,user,computed
-recipe_name,Recipe title,recipe,raw
-recipe_img,Recipe image URL,recipe,raw
 total_time,Total time (minutes),recipe,computed
 servings,Number of servings,recipe,raw
-author_name,Recipe author name,recipe,raw
-author_id,Recipe author identifier,recipe,raw
-tags,Recipe tags,recipe,raw
-recipe_url,Recipe URL,recipe,raw
-description,Recipe description text,recipe,raw
-instruction,Cooking instructions text,recipe,raw
-note,Additional notes,recipe,raw
-created_at,Recipe created timestamp,recipe,raw
-updated_at,Recipe last updated timestamp,recipe,raw
 ingredient_count,Count of ingredients,recipe,computed
 unique_ingredients,Unique ingredient count,recipe,computed
 complexity_score,Recipe complexity score,recipe,computed
 ingredient_count_db,Ingredient count from relationship table,recipe,computed
-user_complexity_match,User preference × recipe complexity,user,computed
-user_recipe_engagement_match,Engagement ÷ (ingredient count + 1),user,computed
-user_time_compatibility,Interactions/day ÷ (total time + 1),user,computed
-is_mobile_user,1 if primary device is phone else 0,user,computed
-is_ios_user,1 if primary platform is iOS else 0,user,computed
+user_complexity_match,User preference × recipe complexity,user-recipe,computed
+user_recipe_engagement_match,Engagement ÷ (ingredient count + 1),user-recipe,computed
+user_time_compatibility,Interactions/day ÷ (total time + 1),user-recipe,computed
+user_author_interaction_count,Count of user's interactions with this recipe's author,user-recipe,computed
+has_interacted_with_author,1 if user has interacted with this author before else 0,user-recipe,computed
+author_affinity_score,User's affinity for this author (interaction_count / total_interactions),user-recipe,computed
+user_recipe_interaction_count,Count of user's interactions with this specific recipe,user-recipe,computed
+user_recipe_max_rating,Highest engagement score user gave this recipe,user-recipe,computed
+user_recipe_avg_rating,Average engagement score across user's interactions with this recipe,user-recipe,computed
+user_recipe_last_interaction,Timestamp of user's last interaction with this recipe,user-recipe,computed
+has_interacted_with_recipe,1 if user has interacted with this specific recipe before else 0,user-recipe,computed
+recipe_recency_score,Time-decay score for recipe interaction recency (1 / (1 + days/30)),user-recipe,computed
+ingredient_similarity_score,Jaccard similarity between recipe ingredients and user's ingredient history,user-recipe,computed
+ingredient_overlap_count,Count of common ingredients between recipe and user's history,user-recipe,computed
+has_common_ingredients,1 if recipe shares any ingredients with user's history else 0,user-recipe,computed

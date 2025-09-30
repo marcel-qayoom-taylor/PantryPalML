@@ -60,16 +60,16 @@ class MLConfig:
     validation_size: float = 0.2
     negative_sampling_ratio: int = 4
 
-    # Model hyperparameters - Optimized via Optuna tuning (NDCG: 99.986%)
-    num_leaves: int = 49
-    learning_rate: float = 0.0205
-    feature_fraction: float = 0.642
-    bagging_fraction: float = 0.801
-    bagging_freq: int = 3
-    min_child_samples: int = 45
-    lambda_l1: float = 3.403
-    lambda_l2: float = 2.604
-    max_boost_rounds: int = 1000
+    # Model hyperparameters
+    num_leaves: int = 31
+    learning_rate: float = 0.03
+    feature_fraction: float = 0.7
+    bagging_fraction: float = 0.8
+    bagging_freq: int = 5
+    min_child_samples: int = 50
+    lambda_l1: float = 1.0
+    lambda_l2: float = 1.0
+    max_boost_rounds: int = 500
     early_stopping_rounds: int = 50
     # Ranking evaluation cutoffs (used by Lambdarank)
     ndcg_eval_at: tuple[int, int, int] = (5, 10, 20)
@@ -175,6 +175,9 @@ def get_feature_columns_to_exclude() -> list:
         # Drop prep_time and cook_time; DB provides only total_time
         "prep_time",
         "cook_time",
+        # Dead features (constant = 0 for all samples)
+        "is_mobile_user",  # Always 0
+        "is_ios_user",  # Always 0
     ]
 
 

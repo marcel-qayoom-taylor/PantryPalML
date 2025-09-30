@@ -48,6 +48,7 @@ class RecipeScorer:
 
         # Data
         self.recipe_features: pd.DataFrame = pd.DataFrame()
+        self.recipe_ingredients: pd.DataFrame = pd.DataFrame()
         self.user_profiles: dict = {}  # Cache user profiles
 
         logger.info("Initializing Recipe Scorer")
@@ -55,6 +56,7 @@ class RecipeScorer:
         # Load model and data
         self._load_model_components()
         self._load_recipe_data()
+        self._load_ingredient_data()
 
     def _load_model_components(self) -> None:
         """
@@ -151,6 +153,28 @@ class RecipeScorer:
         except Exception:
             logger.exception("Error loading recipe data")
             raise
+
+    def _load_ingredient_data(self) -> None:
+        """Load recipe-ingredient relationships for similarity calculations."""
+        try:
+            ingredients_file = (
+                self.config.output_dir / "real_recipe_ingredients_from_db.csv"
+            )
+            self.recipe_ingredients = safe_load_csv(ingredients_file)
+            if self.recipe_ingredients is not None:
+                logger.info(
+                    f"Loaded {len(self.recipe_ingredients)} recipe-ingredient relationships"
+                )
+            else:
+                logger.warning(
+                    "Recipe ingredients file not found - ingredient similarity features will be disabled"
+                )
+                self.recipe_ingredients = pd.DataFrame()
+        except Exception:
+            logger.warning(
+                "Could not load recipe ingredients - ingredient similarity features will be disabled"
+            )
+            self.recipe_ingredients = pd.DataFrame()
 
     def create_user_profile_from_interactions(self, interactions: list[dict]) -> dict:
         """
@@ -268,6 +292,15 @@ class RecipeScorer:
         # Create user profile from interactions
         user_profile = self.create_user_profile_from_interactions(user_interactions)
 
+        # Pre-compute user's ingredient preferences
+        user_ingredient_set = self._build_user_ingredient_set(user_interactions)
+
+        # Pre-compute user's author preferences
+        user_author_counts = self._build_user_author_preferences(user_interactions)
+
+        # Pre-compute user's recipe history
+        user_recipe_history = self._build_user_recipe_history(user_interactions)
+
         # Create user-recipe feature combinations
         user_recipe_features = []
 
@@ -279,8 +312,19 @@ class RecipeScorer:
             for col, value in recipe.items():
                 combination[col] = value
 
-            # Add interaction features
+            # Add basic interaction features
             combination = self._calculate_interaction_features(combination)
+
+            # Add personalized features
+            combination = self._add_author_affinity_at_inference(
+                combination, recipe, user_author_counts, user_profile
+            )
+            combination = self._add_recipe_reengagement_at_inference(
+                combination, recipe, user_recipe_history
+            )
+            combination = self._add_ingredient_similarity_at_inference(
+                combination, recipe, user_ingredient_set
+            )
 
             user_recipe_features.append(combination)
 
@@ -359,6 +403,81 @@ class RecipeScorer:
 
         return recommendations[:n_recommendations]
 
+    def _build_user_ingredient_set(self, user_interactions: list[dict]) -> set:
+        """Build a set of all ingredients from user's interacted recipes."""
+        if self.recipe_ingredients.empty:
+            return set()
+
+        # Get all recipe IDs the user has interacted with (positive interactions only)
+        interaction_weights = self.config.interaction_weights
+        user_recipe_ids = set()
+
+        for interaction in user_interactions:
+            event_type = interaction.get("event_type", "")
+            rating = interaction_weights.get(event_type, 0)
+            if rating > 0:
+                user_recipe_ids.add(str(interaction["recipe_id"]))
+
+        # Get all ingredients for those recipes
+        user_ingredients = set()
+        for recipe_id in user_recipe_ids:
+            recipe_ingredients = self.recipe_ingredients[
+                self.recipe_ingredients["recipe_id"].astype(str) == recipe_id
+            ]["ingredient_id"].tolist()
+            user_ingredients.update(recipe_ingredients)
+
+        return user_ingredients
+
+    def _build_user_author_preferences(self, user_interactions: list[dict]) -> dict:
+        """Build a dictionary of author interaction counts."""
+        interaction_weights = self.config.interaction_weights
+        author_counts = {}
+
+        for interaction in user_interactions:
+            event_type = interaction.get("event_type", "")
+            rating = interaction_weights.get(event_type, 0)
+            if rating > 0:
+                recipe_id = str(interaction["recipe_id"])
+                # Get author name from recipe features
+                recipe_row = self.recipe_features[
+                    self.recipe_features["recipe_id"].astype(str) == recipe_id
+                ]
+                if not recipe_row.empty:
+                    author_name = recipe_row.iloc[0].get("author_name", "Unknown")
+                    author_counts[author_name] = author_counts.get(author_name, 0) + 1
+
+        return author_counts
+
+    def _build_user_recipe_history(self, user_interactions: list[dict]) -> dict:
+        """Build a dictionary of recipe interaction history."""
+        recipe_history = {}
+        interaction_weights = self.config.interaction_weights
+
+        for interaction in user_interactions:
+            recipe_id = str(interaction["recipe_id"])
+            event_type = interaction.get("event_type", "")
+            rating = interaction_weights.get(event_type, 1.0)
+            timestamp = interaction.get("timestamp", 0)
+
+            if recipe_id not in recipe_history:
+                recipe_history[recipe_id] = {
+                    "count": 0,
+                    "max_rating": 0,
+                    "total_rating": 0,
+                    "last_timestamp": 0,
+                }
+
+            recipe_history[recipe_id]["count"] += 1
+            recipe_history[recipe_id]["max_rating"] = max(
+                recipe_history[recipe_id]["max_rating"], rating
+            )
+            recipe_history[recipe_id]["total_rating"] += rating
+            recipe_history[recipe_id]["last_timestamp"] = max(
+                recipe_history[recipe_id]["last_timestamp"], timestamp
+            )
+
+        return recipe_history
+
     def _calculate_interaction_features(self, combination: dict) -> dict:
         """Calculate interaction features for a user-recipe combination."""
 
@@ -389,6 +508,92 @@ class RecipeScorer:
             )
         else:
             combination["user_time_compatibility"] = 0.0
+
+        return combination
+
+    def _add_author_affinity_at_inference(
+        self,
+        combination: dict,
+        recipe: pd.Series,
+        user_author_counts: dict,
+        user_profile: dict,
+    ) -> dict:
+        """Add author affinity features at inference time."""
+        author_name = recipe.get("author_name", "Unknown")
+        interaction_count = user_author_counts.get(author_name, 0)
+
+        combination["user_author_interaction_count"] = interaction_count
+        combination["has_interacted_with_author"] = 1 if interaction_count > 0 else 0
+
+        total_interactions = user_profile.get("total_interactions", 0)
+        combination["author_affinity_score"] = interaction_count / (
+            total_interactions + 1
+        )
+
+        return combination
+
+    def _add_recipe_reengagement_at_inference(
+        self, combination: dict, recipe: pd.Series, user_recipe_history: dict
+    ) -> dict:
+        """Add recipe re-engagement features at inference time."""
+        recipe_id = str(recipe["recipe_id"])
+        history = user_recipe_history.get(recipe_id, {})
+
+        combination["user_recipe_interaction_count"] = history.get("count", 0)
+        combination["user_recipe_max_rating"] = history.get("max_rating", 0)
+        combination["user_recipe_avg_rating"] = (
+            history.get("total_rating", 0) / history.get("count", 1)
+            if history.get("count", 0) > 0
+            else 0
+        )
+        combination["has_interacted_with_recipe"] = (
+            1 if history.get("count", 0) > 0 else 0
+        )
+
+        # Calculate recency
+        last_timestamp = history.get("last_timestamp", 0)
+        if last_timestamp > 0:
+            from datetime import datetime
+
+            days_since = (datetime.now().timestamp() - last_timestamp) / 86400
+            combination["days_since_recipe_interaction"] = days_since
+            combination["recipe_recency_score"] = 1 / (1 + days_since / 30)
+        else:
+            combination["days_since_recipe_interaction"] = 999
+            combination["recipe_recency_score"] = 0
+
+        return combination
+
+    def _add_ingredient_similarity_at_inference(
+        self, combination: dict, recipe: pd.Series, user_ingredient_set: set
+    ) -> dict:
+        """Add ingredient similarity features at inference time."""
+        if self.recipe_ingredients.empty or not user_ingredient_set:
+            combination["ingredient_similarity_score"] = 0
+            combination["ingredient_overlap_count"] = 0
+            combination["has_common_ingredients"] = 0
+            return combination
+
+        # Get this recipe's ingredients
+        recipe_id = str(recipe["recipe_id"])
+        recipe_ingredients = set(
+            self.recipe_ingredients[
+                self.recipe_ingredients["recipe_id"].astype(str) == recipe_id
+            ]["ingredient_id"].tolist()
+        )
+
+        if recipe_ingredients and user_ingredient_set:
+            intersection = len(user_ingredient_set.intersection(recipe_ingredients))
+            union = len(user_ingredient_set.union(recipe_ingredients))
+            jaccard = intersection / union if union > 0 else 0
+
+            combination["ingredient_similarity_score"] = jaccard
+            combination["ingredient_overlap_count"] = intersection
+            combination["has_common_ingredients"] = 1 if intersection > 0 else 0
+        else:
+            combination["ingredient_similarity_score"] = 0
+            combination["ingredient_overlap_count"] = 0
+            combination["has_common_ingredients"] = 0
 
         return combination
 

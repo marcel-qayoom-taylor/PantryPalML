@@ -904,6 +904,209 @@ class TrainingDataBuilder:
         if "primary_platform" in df.columns:
             df["is_ios_user"] = (df["primary_platform"] == "ios").astype(int)
 
+        # === NEW PERSONALIZED FEATURES ===
+
+        # 1. Author Affinity: Has user interacted with this author before?
+        df = self._add_author_affinity_features(df)
+
+        # 2. Recipe Re-engagement: Has user interacted with this recipe before?
+        df = self._add_recipe_reengagement_features(df)
+
+        # 3. Ingredient Similarity: How similar are recipe ingredients to user's history?
+        df = self._add_ingredient_similarity_features(df)
+
+        return df
+
+    def _add_author_affinity_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add author affinity features based on user's interaction history."""
+        logger.info("Adding author affinity features...")
+
+        # Calculate author interaction counts per user
+        if "author_name" in df.columns:
+            # Get positive interactions only (label > 0)
+            positive_interactions = self.user_interactions[
+                self.user_interactions["rating"] > 0
+            ].copy()
+
+            # Ensure recipe_id is string in both dataframes
+            positive_interactions["recipe_id"] = positive_interactions[
+                "recipe_id"
+            ].astype(str)
+            recipe_features_for_merge = self.recipe_features[
+                ["recipe_id", "author_name"]
+            ].copy()
+            recipe_features_for_merge["recipe_id"] = recipe_features_for_merge[
+                "recipe_id"
+            ].astype(str)
+
+            # Merge to get author names for user's historical interactions
+            positive_interactions = positive_interactions.merge(
+                recipe_features_for_merge, on="recipe_id", how="left"
+            )
+
+            # Count interactions per (user, author)
+            author_interactions = (
+                positive_interactions.groupby(["user_id", "author_name"])
+                .size()
+                .reset_index(name="user_author_interaction_count")
+            )
+
+            # Merge back to training data
+            df = df.merge(
+                author_interactions, on=["user_id", "author_name"], how="left"
+            )
+            df["user_author_interaction_count"] = df[
+                "user_author_interaction_count"
+            ].fillna(0)
+
+            # Binary flag: has user interacted with this author?
+            df["has_interacted_with_author"] = (
+                df["user_author_interaction_count"] > 0
+            ).astype(int)
+
+            # Author affinity score (normalized by user's total interactions)
+            if "total_interactions" in df.columns:
+                df["author_affinity_score"] = df["user_author_interaction_count"] / (
+                    df["total_interactions"] + 1
+                )
+            else:
+                df["author_affinity_score"] = 0
+
+        return df
+
+    def _add_recipe_reengagement_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add recipe re-engagement features based on user's past interactions."""
+        logger.info("Adding recipe re-engagement features...")
+
+        # Count how many times user interacted with each recipe
+        recipe_reengagement = (
+            self.user_interactions.groupby(["user_id", "recipe_id"])
+            .agg(
+                {
+                    "rating": ["count", "max", "mean"],
+                    "datetime": "max",  # Most recent interaction
+                }
+            )
+            .reset_index()
+        )
+
+        recipe_reengagement.columns = [
+            "user_id",
+            "recipe_id",
+            "user_recipe_interaction_count",
+            "user_recipe_max_rating",
+            "user_recipe_avg_rating",
+            "user_recipe_last_interaction",
+        ]
+
+        # Merge back to training data
+        df = df.merge(recipe_reengagement, on=["user_id", "recipe_id"], how="left")
+
+        # Fill missing values
+        df["user_recipe_interaction_count"] = df[
+            "user_recipe_interaction_count"
+        ].fillna(0)
+        df["user_recipe_max_rating"] = df["user_recipe_max_rating"].fillna(0)
+        df["user_recipe_avg_rating"] = df["user_recipe_avg_rating"].fillna(0)
+
+        # Binary flag: has user interacted with this specific recipe?
+        df["has_interacted_with_recipe"] = (
+            df["user_recipe_interaction_count"] > 0
+        ).astype(int)
+
+        # Recency score (days since last interaction, if any)
+        if "datetime" in df.columns and "user_recipe_last_interaction" in df.columns:
+            df["days_since_recipe_interaction"] = (
+                df["datetime"] - df["user_recipe_last_interaction"]
+            ).dt.days
+            df["days_since_recipe_interaction"] = df[
+                "days_since_recipe_interaction"
+            ].fillna(999)
+
+            # Recency boost (higher for recently interacted recipes)
+            df["recipe_recency_score"] = 1 / (
+                1 + df["days_since_recipe_interaction"] / 30
+            )
+        else:
+            df["recipe_recency_score"] = 0
+
+        return df
+
+    def _add_ingredient_similarity_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add ingredient-based similarity features."""
+        logger.info("Adding ingredient similarity features...")
+
+        if self.recipe_ingredients.empty:
+            logger.warning(
+                "No recipe ingredients data available for similarity features"
+            )
+            df["ingredient_similarity_score"] = 0
+            df["ingredient_overlap_count"] = 0
+            df["has_common_ingredients"] = 0
+            return df
+
+        # Build ingredient sets for each recipe
+        recipe_ingredient_sets = {}
+        recipe_ingredients_copy = self.recipe_ingredients.copy()
+        recipe_ingredients_copy["recipe_id"] = recipe_ingredients_copy[
+            "recipe_id"
+        ].astype(str)
+
+        for recipe_id, group in recipe_ingredients_copy.groupby("recipe_id"):
+            recipe_ingredient_sets[str(recipe_id)] = set(
+                group["ingredient_id"].tolist()
+            )
+
+        # Calculate ingredient similarity for each user-recipe pair
+        similarity_scores = []
+        overlap_counts = []
+        has_common = []
+
+        for idx, row in df.iterrows():
+            user_id = row["user_id"]
+            recipe_id = str(row["recipe_id"])
+
+            # Get user's historical recipe interactions (positive only)
+            user_recipes = self.user_interactions[
+                (self.user_interactions["user_id"] == user_id)
+                & (self.user_interactions["rating"] > 0)
+            ]["recipe_id"].unique()
+
+            # Get all ingredients from user's historical recipes
+            user_ingredients = set()
+            for hist_recipe_id in user_recipes:
+                hist_recipe_id_str = str(hist_recipe_id)
+                if hist_recipe_id_str in recipe_ingredient_sets:
+                    user_ingredients.update(recipe_ingredient_sets[hist_recipe_id_str])
+
+            # Get current recipe's ingredients
+            recipe_ingredients = recipe_ingredient_sets.get(recipe_id, set())
+
+            # Calculate Jaccard similarity
+            if user_ingredients and recipe_ingredients:
+                intersection = len(user_ingredients.intersection(recipe_ingredients))
+                union = len(user_ingredients.union(recipe_ingredients))
+                jaccard = intersection / union if union > 0 else 0
+
+                similarity_scores.append(jaccard)
+                overlap_counts.append(intersection)
+                has_common.append(1 if intersection > 0 else 0)
+            else:
+                similarity_scores.append(0)
+                overlap_counts.append(0)
+                has_common.append(0)
+
+        df["ingredient_similarity_score"] = similarity_scores
+        df["ingredient_overlap_count"] = overlap_counts
+        df["has_common_ingredients"] = has_common
+
+        logger.info(
+            f"   Average ingredient similarity: {np.mean(similarity_scores):.4f}"
+        )
+        logger.info(
+            f"   Recipes with common ingredients: {sum(has_common)} / {len(has_common)}"
+        )
+
         return df
 
     def _handle_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
