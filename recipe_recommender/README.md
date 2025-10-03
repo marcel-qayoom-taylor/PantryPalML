@@ -106,8 +106,7 @@ python recipe_recommender/inference/recipe_scorer.py
 - **Temporal train/val/test split** (60/20/20)
 
 ### Performance Metrics
-- **Classification**: 99.92% AUC, 97.55% F1-score
-- **Ranking**: 62.18% NDCG@5
+- **Ranking**: NDCG@5 0.6545, NDCG@10 0.6545, Recall@5 0.9555, Recall@10 0.9894, Spearman 0.9958
 - **Speed**: ~0.08 seconds to score 1,967 recipes
 
 ## ⚙️ Configuration

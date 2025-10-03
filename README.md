@@ -54,7 +54,7 @@ Production inference: Load trained model → Score recipes → Generate personal
 ### Key Features
 - ⚡ **Real-time scoring**: Score 1,967 recipes in ~0.08 seconds
 - 🧠 **Hybrid approach**: Combines user behavior with rich recipe metadata  
-- 📊 **High accuracy**: 99.92% AUC, 97.55% F1-score
+- 📊 **Strong ranking performance**: NDCG@5 0.6545, Recall@10 0.9894, Spearman 0.9958
 - 🔧 **Production ready**: Clean API for integration
 - 🚀 **Scalable**: Handles new users, recipes, and retraining
 
@@ -188,15 +188,14 @@ async def get_recommendations(user_id: str, interactions: List[Dict]):
 
 ## 📊 Model Performance
 
-**Validation Performance:**
-- **AUC**: 99.92%
-- **Precision**: 97.55%
-- **Recall**: 97.55%
-- **F1-Score**: 97.55%
+Evaluated on held-out test set (temporal split):
+- NDCG@5: 0.6545
+- NDCG@10: 0.6545
+- Recall@5: 0.9555
+- Recall@10: 0.9894
+- Spearman correlation: 0.9958
 
-**Test Performance:**
-- **AUC**: 99.85%
-- **F1-Score**: 97.23%
+Note: We report ranking metrics suited to recommendation tasks.
 
 **Training Data:**
 - 20,730 user-recipe pairs (831 users, 1,967 recipes)
@@ -405,7 +404,7 @@ uv run python recipe_recommender/models/recipe_ranker.py
 - **Recommendation CTR**: Click-through rates on recommended recipes
 - **Cooking Rate**: How often recommended recipes are actually cooked
 - **User Engagement**: Changes in overall recipe interaction rates
-- **Model Performance**: AUC, precision, recall on held-out data
+- **Model Performance**: NDCG@k, Recall@k, Spearman correlation on held-out data
 
 ### Model Refresh Schedule
 - **Weekly**: Monitor performance metrics

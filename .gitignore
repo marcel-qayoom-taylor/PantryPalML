@@ -54,5 +54,4 @@ ml_etl/output/*.csv
 .env
 
 # io
-recipe_recommender/input/*
 recipe_recommender/output/*

@@ -66,7 +66,7 @@ The notebook demonstrates a complete machine learning pipeline in 6 cells:
 ### Cell 3: Model Training
 - **Purpose**: Trains a LightGBM binary classifier
 - **Features**: Uses numeric columns (rating, ingredient count, complexity)
-- **Output**: Performance metrics (AUC, Precision, Recall, F1)
+- **Output**: Ranking metrics (NDCG@k, Recall@k, Spearman correlation)
 - **Time**: ~10-20 seconds
 
 ### Cell 4: Recommendation Demo
@@ -91,17 +91,12 @@ Training LightGBM model...
 [LightGBM] [Info] Training until validation scores don't improve for 50 rounds
 [LightGBM] [Info] Early stopping at iteration 145
 
-Validation Performance:
-  AUC: 0.9992
-  Precision: 0.9755
-  Recall: 0.9755
-  F1-Score: 0.9755
-
-Test Performance:
-  AUC: 0.9985
-  Precision: 0.9723
-  Recall: 0.9723
-  F1-Score: 0.9723
+Ranking Performance:
+  NDCG@5: 0.6545
+  NDCG@10: 0.6545
+  Recall@5: 0.9555
+  Recall@10: 0.9894
+  Spearman: 0.9958
 
 Model saved to: recipe_recommender/output/hybrid_models/
 ```
@@ -128,8 +123,9 @@ Top 10 Recommendations:
 ```
 
 ### Performance Expectations:
-- **Training AUC**: Should be > 0.95 (production model achieves ~0.999)
-- **F1-Score**: Should be > 0.90 (production model achieves ~0.975)
+- **NDCG@5**: Around 0.65 on the provided dataset
+- **Recall@10**: Around 0.98 on the provided dataset
+- **Spearman**: Around 0.99 (rank correlation)
 - **Recommendations**: Returns top-N ranked recipes with scores 0.0-1.0
 - **Inference Speed**: ~0.08 seconds to score 1,967 recipes
 
@@ -151,7 +147,7 @@ Top 10 Recommendations:
 - **Algorithm**: Gradient Boosting Machine (LightGBM) for binary classification
 - **Features**: Numeric features extracted from user-recipe interactions
 - **Loss Function**: Binary cross-entropy (logistic loss)
-- **Evaluation**: AUC, Precision, Recall, F1-score on held-out validation set
+- **Evaluation**: NDCG@k, Recall@k, Spearman correlation on held-out sets
 
 ### System Workflow
 1. Data loading and feature preparation
@@ -181,7 +177,7 @@ Top 10 Recommendations:
 - **Cause**: Running cells individually without dependencies
 - **Solution**: Run **Runtime → Restart & Run All** to execute in sequence
 
-#### Training notebook shows low performance (AUC < 0.90)
+#### Training notebook shows low performance (NDCG@5 < 0.60)
 - **Cause**: Possible data loading issue or incomplete training
 - **Solution**: 
   1. Check that training data was loaded correctly
@@ -206,10 +202,9 @@ Top 10 Recommendations:
 ## 📊 Understanding the Results
 
 ### Model Performance Metrics:
-- **AUC (0.7-0.95)**: How well the model distinguishes positive/negative recipe preferences
-- **Precision (0.6-0.9)**: Of recipes predicted as relevant, how many actually are
-- **Recall (0.6-0.9)**: Of truly relevant recipes, how many were identified
-- **F1-Score (0.6-0.9)**: Balanced measure combining precision and recall
+- **NDCG@k**: Ranking quality emphasizing top-k positions (higher is better)
+- **Recall@k**: Fraction of relevant items appearing in the top-k list
+- **Spearman correlation**: Agreement between predicted ranking and ground truth order
 
 ### Recommendation Scores:
 - **Range**: 0.0 (least relevant) to 1.0 (most relevant)
@@ -293,7 +288,7 @@ These notebooks provide a production-ready foundation. For further enhancements:
 - **Algorithm Choice**: Why LightGBM? (Fast, accurate, handles mixed features well)
 - **Hybrid Approach**: Benefits of combining collaborative + content-based filtering
 - **Feature Engineering**: How user profiles and recipe content create powerful features
-- **Metrics Interpretation**: What does AUC=0.999 and F1=0.975 mean for recommendations?
+- **Metrics Interpretation**: What do NDCG@5≈0.65, Recall@10≈0.99, Spearman≈0.996 mean for recommendations?
 - **Cold Start**: How the system handles new users with minimal interaction history
 
 ### Live Demo Strategy
