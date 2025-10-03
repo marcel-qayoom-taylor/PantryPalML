@@ -2,27 +2,15 @@
 
 A gradient boosted model (GBM) that combines user interaction history with rich recipe content features to provide personalized recipe recommendations.
 
-## ☁️ Cloud-Executable Demo Notebooks
+## ☁️ Cloud-Executable End-to-End Notebook
 
-Run the full ML pipeline in the cloud with one click. No local setup required.
+Run the entire pipeline (training + inference) with one click. No local setup required.
 
-### Training Notebook
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_Training.ipynb)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_Training.ipynb)
+### End-to-End Notebook
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_EndToEnd.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_EndToEnd.ipynb)
 
-Complete training pipeline: data loading → feature engineering → model training → evaluation
-
-### Inference Notebook
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_Inference.ipynb)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_Inference.ipynb)
-
-Production inference: Load trained model → Score recipes → Generate personalized recommendations
-
-### What the Notebooks Show
-- **Training**: End-to-end pipeline from raw data to trained model with evaluation metrics
-- **Inference**: Real-time recommendation generation using pre-trained models
-- Self-contained environment setup (installs dependencies automatically)
-- Uses repo-included datasets and pre-trained models for fast, consistent execution
+This notebook covers: data loading → feature engineering → model training → evaluation → real-time recommendation demo.
 
 ### Task I/O (for A2 criteria)
 - **Training Input**: CSV files with user–recipe pairs and engineered features (`recipe_recommender/output/hybrid_*_data.csv`)
@@ -31,12 +19,12 @@ Production inference: Load trained model → Score recipes → Generate personal
 - **Inference Output**: Ranked list of recipes with scores and metadata
 
 ### How to Run (Colab)
-1. Click the Colab badge for the desired notebook
-2. Runtime → Run all (installs dependencies, runs pipeline, shows results)
+1. Click the Colab badge above
+2. Runtime → Run all (installs dependencies, runs full pipeline)
 3. Optional: Modify parameters and re-run cells to see different results
 
 ### How to Run (Binder/Jupyter)
-1. Click the Binder badge for the desired notebook
+1. Click the Binder badge above
 2. Wait for environment to load
 3. Kernel → Restart & Run All
 

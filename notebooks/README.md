@@ -1,31 +1,21 @@
 # A2 Production Notebooks Usage Guide
 
-This directory contains production-ready notebooks for the PantryPal Recipe Recommendation System:
-- **`A2_Production_Training.ipynb`** - Complete training pipeline from data to model
-- **`A2_Production_Inference.ipynb`** - Real-time inference with pre-trained models
+This directory contains the end-to-end production notebook for the PantryPal Recipe Recommendation System:
+- **`A2_Production_EndToEnd.ipynb`** - Complete pipeline from data to model training to real-time inference
 
 ## 🚀 Quick Start
 
 ### Option 1: Google Colab (Recommended)
 
-**Training Notebook:**
-1. Click: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_Training.ipynb)
+**End-to-End Notebook:**
+1. Click: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_EndToEnd.ipynb)
 2. Runtime → Run all (or press `Ctrl+F9`)
-3. Wait ~10 seconds for training to complete
-4. View model performance metrics and evaluation results
-
-**Inference Notebook:**
-1. Click: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_Inference.ipynb)
-2. Runtime → Run all
-3. See personalized recommendations generated in real-time
+3. View training metrics and generated recommendations in one run
 
 ### Option 2: Binder (Jupyter Lab)
 
-**Training:**
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_Training.ipynb)
-
-**Inference:**
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_Inference.ipynb)
+**End-to-End:**
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_EndToEnd.ipynb)
 
 1. Click badge and wait for environment to build (~1-2 minutes)
 2. Once Jupyter Lab opens, the notebook loads automatically
@@ -40,9 +30,8 @@ cd PantryPalML
 # Install dependencies
 pip install lightgbm pandas numpy scikit-learn matplotlib seaborn jupyter supabase python-dotenv
 
-# Start Jupyter (choose one notebook)
-jupyter notebook notebooks/A2_Production_Training.ipynb
-jupyter notebook notebooks/A2_Production_Inference.ipynb
+# Start Jupyter (end-to-end)
+jupyter notebook notebooks/A2_Production_EndToEnd.ipynb
 
 # In the notebook: Kernel → Restart & Run All
 ```
@@ -324,9 +313,8 @@ pip list | grep lightgbm  # Check LightGBM installed
 ls -lh recipe_recommender/output/hybrid_*.csv
 ls -lh recipe_recommender/output/hybrid_models/
 
-# Run notebooks from command line
-jupyter nbconvert --to notebook --execute notebooks/A2_Production_Training.ipynb
-jupyter nbconvert --to notebook --execute notebooks/A2_Production_Inference.ipynb
+# Run notebook from command line
+jupyter nbconvert --to notebook --execute notebooks/A2_Production_EndToEnd.ipynb
 ```
 
 ---
