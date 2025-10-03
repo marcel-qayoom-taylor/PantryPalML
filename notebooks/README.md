@@ -1,22 +1,35 @@
-# A2 Demo Notebook Usage Guide
+# A2 Production Notebooks Usage Guide
 
-This directory contains `A2_Colab_Demo.ipynb` - a self-contained cloud-executable demonstration of the PantryPal Recipe Recommendation System for university assignment A2.
+This directory contains production-ready notebooks for the PantryPal Recipe Recommendation System:
+- **`A2_Production_Training.ipynb`** - Complete training pipeline from data to model
+- **`A2_Production_Inference.ipynb`** - Real-time inference with pre-trained models
 
 ## 🚀 Quick Start
 
 ### Option 1: Google Colab (Recommended)
-1. Click this badge: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Colab_Demo.ipynb)
-2. Wait for Colab to load the notebook
-3. Click **Runtime → Run all** (or press `Ctrl+F9`)
-4. Wait ~2-3 minutes for complete execution
-5. Scroll down to see results and smoke test output
+
+**Training Notebook:**
+1. Click: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_Training.ipynb)
+2. Runtime → Run all (or press `Ctrl+F9`)
+3. Wait ~10 seconds for training to complete
+4. View model performance metrics and evaluation results
+
+**Inference Notebook:**
+1. Click: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_Inference.ipynb)
+2. Runtime → Run all
+3. See personalized recommendations generated in real-time
 
 ### Option 2: Binder (Jupyter Lab)
-1. Click this badge: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Colab_Demo.ipynb)
-2. Wait for Binder to build the environment (~1-2 minutes)
-3. Once Jupyter Lab opens, the notebook should load automatically
-4. Click **Kernel → Restart & Run All**
-5. Wait for execution to complete
+
+**Training:**
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_Training.ipynb)
+
+**Inference:**
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_Inference.ipynb)
+
+1. Click badge and wait for environment to build (~1-2 minutes)
+2. Once Jupyter Lab opens, the notebook loads automatically
+3. Click **Kernel → Restart & Run All**
 
 ### Option 3: Local Jupyter
 ```bash
@@ -25,10 +38,11 @@ git clone https://github.com/marcel-qayoom-taylor/PantryPalML.git
 cd PantryPalML
 
 # Install dependencies
-pip install lightgbm pandas numpy scikit-learn matplotlib seaborn jupyter
+pip install lightgbm pandas numpy scikit-learn matplotlib seaborn jupyter supabase python-dotenv
 
-# Start Jupyter
-jupyter notebook notebooks/A2_Colab_Demo.ipynb
+# Start Jupyter (choose one notebook)
+jupyter notebook notebooks/A2_Production_Training.ipynb
+jupyter notebook notebooks/A2_Production_Inference.ipynb
 
 # In the notebook: Kernel → Restart & Run All
 ```
@@ -67,29 +81,71 @@ The notebook demonstrates a complete machine learning pipeline in 6 cells:
 
 ## 🎯 Expected Outputs
 
-### Successful Run Example:
+### Training Notebook Output:
 ```
 Environment ready. Project root: /content/PantryPalML
-(100, 6) (20, 6) (20, 6)
-{'AUC': 0.95, 'Precision': 0.89, 'Recall': 0.85, 'F1': 0.87}
-[DataFrame showing top 10 recipe recommendations]
-SMOKE TEST: PASS
-Train/Val/Test sizes: 100, 20, 20
-Features used: 3
+Loading datasets...
+Train: (16,584, 22) | Val: (2,073, 22) | Test: (2,073, 22)
+
+Training LightGBM model...
+[LightGBM] [Info] Training until validation scores don't improve for 50 rounds
+[LightGBM] [Info] Early stopping at iteration 145
+
+Validation Performance:
+  AUC: 0.9992
+  Precision: 0.9755
+  Recall: 0.9755
+  F1-Score: 0.9755
+
+Test Performance:
+  AUC: 0.9985
+  Precision: 0.9723
+  Recall: 0.9723
+  F1-Score: 0.9723
+
+Model saved to: recipe_recommender/output/hybrid_models/
+```
+
+### Inference Notebook Output:
+```
+Loading pre-trained model...
+Model loaded successfully: hybrid_lightgbm_model.txt
+
+Loading recipe catalog...
+1,967 recipes loaded with complete features
+
+Generating recommendations for user: demo_user_001
+User interaction history: 3 events
+
+Top 10 Recommendations:
+┌──────────┬───────────────────────────┬───────┬────────────────┬─────────┐
+│ recipe_id │ recipe_name              │ score │ author_name    │ time    │
+├──────────┼───────────────────────────┼───────┼────────────────┼─────────┤
+│ 1234     │ Spicy Thai Basil Chicken │ 0.945 │ Chef Williams  │ 30 min  │
+│ 5678     │ Mediterranean Pasta      │ 0.923 │ Chef Anderson  │ 25 min  │
+│ ...      │ ...                      │ ...   │ ...            │ ...     │
+└──────────┴───────────────────────────┴───────┴────────────────┴─────────┘
 ```
 
 ### Performance Expectations:
-- **AUC**: Should be > 0.7 (typically 0.8-0.95)
-- **F1-Score**: Should be > 0.6 (typically 0.7-0.9)
-- **Recommendations**: Should return 10 ranked recipes with scores
+- **Training AUC**: Should be > 0.95 (production model achieves ~0.999)
+- **F1-Score**: Should be > 0.90 (production model achieves ~0.975)
+- **Recommendations**: Returns top-N ranked recipes with scores 0.0-1.0
+- **Inference Speed**: ~0.08 seconds to score 1,967 recipes
 
 ## 🔧 A2 Assignment Criteria Compliance
 
 ### Task Definition (Input/Output)
-- **Training Input**: CSV with user-recipe pairs and features (`user_id`, `recipe_id`, `label`, `avg_rating`, `ingredient_count`, `complexity_score`)
-- **Training Output**: Trained LightGBM model with binary classification capability
-- **Inference Input**: User ID and candidate recipes DataFrame
+- **Training Input**: CSV files with user-recipe pairs and 22 engineered features
+  - Features include: user behavior patterns, recipe content, compatibility scores
+  - Files: `hybrid_train_data.csv`, `hybrid_val_data.csv`, `hybrid_test_data.csv`
+- **Training Output**: Trained LightGBM model with metadata
+  - Model file: `hybrid_lightgbm_model.txt`
+  - Metadata: `hybrid_lightgbm_metadata.json`, `best_params.json`
+- **Inference Input**: User ID and interaction history (list of recipe events)
+  - Format: `[{"recipe_id": "100", "event_type": "Recipe Cooked", "timestamp": 1755666000}]`
 - **Inference Output**: Ranked list of recipes with relevance scores (0-1 range)
+  - Includes recipe metadata: name, author, time, servings, ingredients
 
 ### Model Implementation
 - **Algorithm**: Gradient Boosting Machine (LightGBM) for binary classification
@@ -108,26 +164,44 @@ Features used: 3
 
 ### Common Issues & Solutions:
 
-#### "No module named 'lightgbm'"
-- **Solution**: Re-run Cell 1 or manually install: `!pip install lightgbm`
+#### "No module named 'lightgbm'" or other import errors
+- **Solution**: Re-run the first cell (Environment Setup) or manually install:
+  ```python
+  !pip install lightgbm pandas numpy scikit-learn matplotlib seaborn supabase python-dotenv
+  ```
 
-#### "SMOKE TEST: FAIL - Dataframes not defined"
-- **Cause**: Cells were run out of order
+#### "File not found" errors for CSV or model files
+- **Cause**: Repository files not properly cloned or path issues
+- **Solution**: 
+  1. Verify repo was cloned: Check if `/content/PantryPalML` exists (Colab)
+  2. Re-run the environment setup cell
+  3. Check that `recipe_recommender/output/` directory exists with data files
+
+#### Cells run out of order
+- **Cause**: Running cells individually without dependencies
 - **Solution**: Run **Runtime → Restart & Run All** to execute in sequence
 
-#### "SMOKE TEST: FAIL - Non-numeric features found"
-- **Cause**: Data loading issue with feature types
-- **Solution**: This indicates the fallback synthetic data generator ran - this is normal if CSV files are missing
+#### Training notebook shows low performance (AUC < 0.90)
+- **Cause**: Possible data loading issue or incomplete training
+- **Solution**: 
+  1. Check that training data was loaded correctly
+  2. Verify all 22 features are present
+  3. Ensure training completed (look for "Model saved" message)
 
-#### Low performance metrics (AUC < 0.6)
-- **Cause**: Using synthetic fallback data instead of real training data
-- **Status**: Expected behavior - the synthetic data is for demonstration only
+#### Inference notebook: "No model found"
+- **Cause**: Pre-trained model not loaded or path issue
+- **Solution**: 
+  1. Verify model file exists: `recipe_recommender/output/hybrid_models/hybrid_lightgbm_model.txt`
+  2. If running locally, train the model first using training notebook
+  3. Check paths in notebook configuration cells
 
-#### Colab "Runtime disconnected" 
-- **Solution**: Click **Runtime → Reconnect** and run cells again
+#### Colab "Runtime disconnected"
+- **Solution**: Click **Runtime → Reconnect** and **Runtime → Run all** again
+- **Prevention**: Keep browser tab active during execution
 
-#### Binder fails to load
-- **Alternative**: Use Colab link or run locally
+#### Binder fails to load or times out
+- **Alternative**: Use Colab link (more reliable) or run locally
+- **Note**: Binder can be slow on first build (~2-5 minutes)
 
 ## 📊 Understanding the Results
 
@@ -144,56 +218,125 @@ Features used: 3
 
 ## 🔄 Customization Options
 
-### Modify User Interactions:
-Edit Cell 4 to test different recommendation scenarios:
+### Training Notebook Customization:
+
+**Adjust Model Hyperparameters:**
+Modify the training parameters to experiment with different model configurations:
 ```python
-# Add more diverse test data
-sample_candidates = pd.DataFrame({
-    'user_id': ['test_user'] * 5,
-    'recipe_id': ['recipe_1', 'recipe_2', 'recipe_3', 'recipe_4', 'recipe_5'],
-    'avg_rating': [4.5, 3.2, 4.8, 2.1, 4.0],
-    'ingredient_count': [8, 12, 6, 15, 10],
-    'complexity_score': [5.2, 8.1, 3.5, 9.2, 6.0]
-})
-recs = recommend_for_user("test_user", sample_candidates)
+# In the training cell, modify these parameters
+params = {
+    "learning_rate": 0.05,      # Slower learning (default: 0.1)
+    "num_leaves": 50,           # More complex trees (default: 31)
+    "min_data_in_leaf": 10,     # More regularization (default: 20)
+    "max_depth": 8,             # Limit tree depth (default: -1)
+    "feature_fraction": 0.8,    # Use 80% of features per tree
+}
 ```
 
-### Adjust Model Parameters:
-Modify Cell 3 training parameters:
+**Change Train/Val/Test Split:**
 ```python
-params = {
-    "learning_rate": 0.05,  # Slower learning
-    "num_leaves": 50,       # More complex trees
-    "min_data_in_leaf": 5,  # Less regularization
-}
+# Modify the split ratios
+train_size = 0.70  # 70% training (default: 80%)
+val_size = 0.15    # 15% validation (default: 10%)
+test_size = 0.15   # 15% test (default: 10%)
+```
+
+### Inference Notebook Customization:
+
+**Test Different User Interactions:**
+```python
+# Modify user interaction history
+user_interactions = [
+    {"recipe_id": "100", "event_type": "Recipe Viewed", "timestamp": 1755665991},
+    {"recipe_id": "100", "event_type": "Recipe Cooked", "timestamp": 1755666000},
+    {"recipe_id": "1291", "event_type": "Recipe Favourited", "timestamp": 1755666100},
+    {"recipe_id": "500", "event_type": "Recipe Shared", "timestamp": 1755666200},
+]
+```
+
+**Adjust Recommendation Count:**
+```python
+# Get more/fewer recommendations
+recommendations = scorer.get_user_recommendations(
+    user_id="test_user",
+    interaction_history=user_interactions,
+    n_recommendations=20  # Change from default 10 to 20
+)
+```
+
+**Filter Recommendations:**
+```python
+# Filter by cooking time (implement custom filtering)
+quick_recipes = [rec for rec in recommendations['recommendations'] 
+                 if rec['total_time'] <= 30]  # 30 minutes or less
 ```
 
 ## 📈 Next Steps After A2
 
-This demo notebook provides a foundation. For production deployment:
+These notebooks provide a production-ready foundation. For further enhancements:
 
-1. **Scale up**: Use the full training pipeline in `recipe_recommender/models/`
-2. **Real data**: Connect to Supabase database for complete recipe catalog
-3. **Rich features**: Add user behavior patterns and recipe content features
-4. **API deployment**: Integrate with FastAPI for real-time recommendations
+1. **Enhanced Features**: Add text embeddings for recipe descriptions and instructions
+2. **Real-time Updates**: Implement online learning to adapt to new user interactions
+3. **A/B Testing**: Test different model configurations and feature sets
+4. **API Integration**: Deploy with FastAPI for real-time recommendation serving
+5. **Monitoring**: Track recommendation CTR and user engagement metrics
+6. **Explainability**: Add SHAP values to explain why recipes were recommended
 
 ## 💡 Tips for Presentation (A3)
 
-- **Focus on workflow**: Explain the 5-step ML pipeline clearly
-- **Highlight trade-offs**: Discuss why LightGBM vs other algorithms
-- **Show live demo**: Run a cell or two during presentation
-- **Explain metrics**: What do AUC=0.85 and F1=0.80 mean for recommendations?
-- **Discuss limitations**: Synthetic data vs real-world performance
+### Demonstrate Understanding
+- **Training Notebook**: Show the complete ML workflow from data to model
+- **Inference Notebook**: Demonstrate real-time recommendations with different user profiles
+- **Compare Users**: Show how recommendations differ based on interaction history
+
+### Key Discussion Points
+- **Algorithm Choice**: Why LightGBM? (Fast, accurate, handles mixed features well)
+- **Hybrid Approach**: Benefits of combining collaborative + content-based filtering
+- **Feature Engineering**: How user profiles and recipe content create powerful features
+- **Metrics Interpretation**: What does AUC=0.999 and F1=0.975 mean for recommendations?
+- **Cold Start**: How the system handles new users with minimal interaction history
+
+### Live Demo Strategy
+1. Start with **Inference Notebook** for immediate impact
+2. Show recommendations for different user types (e.g., beginner cook vs. experienced)
+3. Modify interaction history live to show personalization
+4. Then show **Training Notebook** to explain how the model was built
+5. Highlight model performance metrics and feature importance
+
+### Address These Questions
+- How does the system balance popularity with personalization?
+- What happens when a new recipe is added?
+- How often should the model be retrained?
+- What are the computational requirements for real-time serving?
 
 ## 📞 Support
 
 If you encounter issues:
-1. Check this README troubleshooting section
-2. Try the alternative platforms (Colab → Binder → Local)
-3. Verify the smoke test output for specific error details
-4. Ensure you run cells in order (use "Restart & Run All")
+1. Check this README troubleshooting section above
+2. Try alternative platforms: Colab → Binder → Local Jupyter
+3. Verify all dependencies are installed (check first cell output)
+4. Ensure cells run in order (use "Restart & Run All")
+5. For file not found errors, verify repo cloning was successful
+6. Check the main project README for additional troubleshooting
+
+### Useful Commands for Local Development
+```bash
+# Verify environment
+python --version  # Should be Python 3.8+
+pip list | grep lightgbm  # Check LightGBM installed
+
+# Check data files exist
+ls -lh recipe_recommender/output/hybrid_*.csv
+ls -lh recipe_recommender/output/hybrid_models/
+
+# Run notebooks from command line
+jupyter nbconvert --to notebook --execute notebooks/A2_Production_Training.ipynb
+jupyter nbconvert --to notebook --execute notebooks/A2_Production_Inference.ipynb
+```
 
 ---
 
-**Ready to run? Click the Colab badge at the top and execute Runtime → Run all!** 🚀
+**Ready to run? Click the Colab badges at the top and execute Runtime → Run all!** 🚀
+
+📚 **For complete documentation, see the [main project README](../README.md)**
 

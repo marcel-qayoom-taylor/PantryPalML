@@ -41,35 +41,31 @@ You should see: `✅ Supabase connection successful!`
 
 The system expects these tables in your Supabase database:
 
-### `recipes` table
+### `recipe` table
 - `id` (int/uuid) - Primary key
 - `name` (text) - Recipe name
-- `author` (text) - Recipe author/source
-- `cooking_time_minutes` (int) - Total cooking time
+- `author_id` (uuid) - Recipe author reference
+- `total_time` (int) - Total cooking time in minutes
 - `servings` (int) - Number of servings
+- `tags` (jsonb/array) - Recipe tags
+- `description` (text) - Recipe description
+- `instruction` (text) - Cooking instructions
 - `created_at` (timestamp)
 - `updated_at` (timestamp)
 - Additional recipe metadata...
 
-### `ingredients` table  
+### `ingredient` table  
 - `id` (int/uuid) - Primary key
 - `name` (text) - Ingredient name
 - `category` (text) - Ingredient category (optional)
 
-### `recipe_ingredients` table
-- `recipe_id` (foreign key to recipes.id)
-- `ingredient_id` (foreign key to ingredients.id)
+### `ingredients_of_recipe` table
+- `recipe_id` (foreign key to recipe.id)
+- `ingredient_id` (foreign key to ingredient.id)
 - `quantity` (text) - Optional quantity
 - `unit` (text) - Optional unit
 
-### `tags` table
-- `id` (int/uuid) - Primary key  
-- `name` (text) - Tag name
-- `category` (text) - Tag category (optional)
-
-### `recipe_tags` table
-- `recipe_id` (foreign key to recipes.id)
-- `tag_id` (foreign key to tags.id)
+**Note:** Tags are typically stored as JSONB array directly in the `recipe` table rather than in separate tables.
 
 ## 🚀 Usage
 

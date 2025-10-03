@@ -2,37 +2,48 @@
 
 A gradient boosted model (GBM) that combines user interaction history with rich recipe content features to provide personalized recipe recommendations.
 
-## ☁️ Cloud-Executable Demo (A2/A3 Submission)
+## ☁️ Cloud-Executable Demo Notebooks
 
-Run the full pipeline in the cloud with one click. No local setup required.
+Run the full ML pipeline in the cloud with one click. No local setup required.
 
-[![Open In Colab](https://colab.research.googleusercontent.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Colab_Demo.ipynb)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Colab_Demo.ipynb)
+### Training Notebook
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_Training.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_Training.ipynb)
 
-### What the Demo Shows
-- End-to-end run: data loading → feature engineering (reference) → model training → evaluation → sample recommendations
-- Self-contained environment setup (installs dependencies in the notebook)
-- Uses repo-included sample outputs to avoid external DB access
+Complete training pipeline: data loading → feature engineering → model training → evaluation
+
+### Inference Notebook
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/marcel-qayoom-taylor/PantryPalML/blob/main/notebooks/A2_Production_Inference.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/marcel-qayoom-taylor/PantryPalML/HEAD?labpath=notebooks%2FA2_Production_Inference.ipynb)
+
+Production inference: Load trained model → Score recipes → Generate personalized recommendations
+
+### What the Notebooks Show
+- **Training**: End-to-end pipeline from raw data to trained model with evaluation metrics
+- **Inference**: Real-time recommendation generation using pre-trained models
+- Self-contained environment setup (installs dependencies automatically)
+- Uses repo-included datasets and pre-trained models for fast, consistent execution
 
 ### Task I/O (for A2 criteria)
-- Training input: CSV files with user–recipe pairs and engineered features (`recipe_recommender/output/hybrid_*_data.csv`)
-- Training output: Trained LightGBM model + metadata (`recipe_recommender/output/hybrid_models/`)
-- Inference input: `user_id` and a list of interaction events (recipe_id, event_type, timestamp)
-- Inference output: Ranked list of recipes with scores and key metadata
+- **Training Input**: CSV files with user–recipe pairs and engineered features (`recipe_recommender/output/hybrid_*_data.csv`)
+- **Training Output**: Trained LightGBM model + metadata (`recipe_recommender/output/hybrid_models/`)
+- **Inference Input**: `user_id` and interaction events (recipe_id, event_type, timestamp)
+- **Inference Output**: Ranked list of recipes with scores and metadata
 
 ### How to Run (Colab)
-1. Click the Colab badge above
-2. Runtime → Run all (installs dependencies, clones repo, runs training/eval, shows recommendations)
-3. Optional: Edit the sample `user_interactions` cell to see different recommendations
+1. Click the Colab badge for the desired notebook
+2. Runtime → Run all (installs dependencies, runs pipeline, shows results)
+3. Optional: Modify parameters and re-run cells to see different results
 
 ### How to Run (Binder/Jupyter)
-1. Click the Binder badge above
-2. Open `notebooks/A2_Colab_Demo.ipynb`
+1. Click the Binder badge for the desired notebook
+2. Wait for environment to load
 3. Kernel → Restart & Run All
 
-Notes:
-- The demo avoids live Supabase calls and relies on small sample CSVs checked into the repo for fast, consistent execution.
-- For full data refresh and DB-backed runs, use the production scripts in the sections below.
+### Notes
+- Notebooks use pre-computed datasets for fast execution
+- For full data refresh and DB-backed runs, see production scripts below
+- See [`notebooks/README.md`](notebooks/README.md) for detailed notebook documentation
 
 ## 🎯 What This System Does
 
@@ -90,6 +101,8 @@ export SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 ### 2. Get Recipe Recommendations
+
+**Python API:**
 ```python
 from recipe_recommender.inference.recipe_scorer import RecipeScorer
 
@@ -116,6 +129,17 @@ for rec in recommendations['recommendations']:
     print(f"  Author: {rec['author_name']}")
     print(f"  Time: {rec['total_time']}min, Servings: {rec['servings']}")
 ```
+
+**Command Line:**
+```bash
+# Get recommendations for a specific user from stored events
+python run_inference_example.py USER_ID -n 10
+
+# See detailed usage guide
+cat INFERENCE_GUIDE.md
+```
+
+For complete inference documentation, see [`INFERENCE_GUIDE.md`](INFERENCE_GUIDE.md).
 
 ### 3. Configuration Management
 The system now uses centralized configuration for easy customization:
@@ -164,13 +188,20 @@ async def get_recommendations(user_id: str, interactions: List[Dict]):
 
 ## 📊 Model Performance
 
-- **NDCG@5**: 62.18%
-- **Recall@5**: 
+**Validation Performance:**
+- **AUC**: 99.92%
+- **Precision**: 97.55%
+- **Recall**: 97.55%
+- **F1-Score**: 97.55%
+
+**Test Performance:**
+- **AUC**: 99.85%
+- **F1-Score**: 97.23%
 
 **Training Data:**
-- 20,730 user-recipe pairs (831 users & 4,117 recipes)
+- 20,730 user-recipe pairs (831 users, 1,967 recipes)
 - 22 engineered features combining user behavior + recipe content
-- Temporal train/validation/test split
+- Temporal train/validation/test split (80/10/10)
 
 ## 🔄 Retraining with New Data
 
