@@ -1,0 +1,706 @@
+[
+  {
+    "recipe_url": "https://www.wellplated.com/asian-ramen-salad/",
+    "v1_recipe_id": "CA92A7D6-8160-4617-9B45-4CEC71CFA271",
+    "v2_recipe_id": 1782,
+    "recipe_name": "Ramen Salad",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/shredded-mexican-beef-burritos-freezer-friendly/",
+    "v1_recipe_id": "B59AF80E-8B90-4A3C-A1F4-0C951FCBAB2A",
+    "v2_recipe_id": 73,
+    "recipe_name": "Beef Burritos",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/easter-chocolate-cake/",
+    "v1_recipe_id": "F581D068-0FB4-44A2-8E58-BAEA74ECDF75",
+    "v2_recipe_id": 266,
+    "recipe_name": "Chocolate Cake",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/triple-threat-brownie-cookies/",
+    "v1_recipe_id": "4EF1D09F-C14F-499B-8CCA-4EEA7F925F29",
+    "v2_recipe_id": 1935,
+    "recipe_name": "Brownie Cookies",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/black-forest-cake/",
+    "v1_recipe_id": "2B7AFFF8-F4D0-4419-AA54-276E863593A4",
+    "v2_recipe_id": 95,
+    "recipe_name": "Black Forest Cake",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/peanut-butter-blondies/",
+    "v1_recipe_id": "13F26BD3-FEB7-4FAD-AB47-9F6239136B11",
+    "v2_recipe_id": 1185,
+    "recipe_name": "Chocolate Chip Peanut Butter Blondies",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/empanada-sauce/",
+    "v1_recipe_id": "487C7ADE-7E1D-4C77-A8A5-521C0C0EBAD5",
+    "v2_recipe_id": 421,
+    "recipe_name": "Empanada sauce",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/greek-zucchini-tots-mini-fritters/",
+    "v1_recipe_id": "E1B2C2AB-87D9-4CCD-8334-20F2DF4ADFCB",
+    "v2_recipe_id": 509,
+    "recipe_name": "Greek Zucchini Tots (Mini Fritters)",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/crock-pot-bbq-chicken/",
+    "v1_recipe_id": "1151D526-01A4-4884-AFF6-717992C36D35",
+    "v2_recipe_id": 1672,
+    "recipe_name": "Crockpot BBQ Chicken",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/singapore-chilli-crab/",
+    "v1_recipe_id": "F0E98489-E879-4583-B6DB-9BCB2432315D",
+    "v2_recipe_id": 967,
+    "recipe_name": "Singapore Chilli Crab",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/whole-wheat-waffles-recipe/",
+    "v1_recipe_id": "FBAC17E5-08FC-4948-A023-92145BF86208",
+    "v2_recipe_id": 1265,
+    "recipe_name": "Blender Whole Wheat Waffles",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/chicken-cordon-bleu-easy-fancy/",
+    "v1_recipe_id": "2C983350-D98F-4DB8-83F1-9E301F3A63B8",
+    "v2_recipe_id": 196,
+    "recipe_name": "Chicken Cordon Bleu",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/bibimbap/",
+    "v1_recipe_id": "35F3DA25-852E-4EC6-8018-C43E70D30002",
+    "v2_recipe_id": 91,
+    "recipe_name": "Bibimbap! (Korean Rice Bowl)",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/chinese-beef-and-broccoli-extra-saucy-take-out-style/",
+    "v1_recipe_id": "B3091940-1CD0-490A-9081-6E65DB9E4C1F",
+    "v2_recipe_id": 242,
+    "recipe_name": "Chinese Beef and Broccoli",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/oven-baked-barbecue-pork-ribs/",
+    "v1_recipe_id": "5CEF3954-1F60-4C2B-B8BE-FC8D7A164CC7",
+    "v2_recipe_id": 776,
+    "recipe_name": "Oven Pork Ribs with Barbecue Sauce",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/mexican-quinoa/",
+    "v1_recipe_id": "2F57F2C5-9A3D-42E4-9148-A4852103FED4",
+    "v2_recipe_id": 1215,
+    "recipe_name": "Mexican Quinoa",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/teriyaki-chicken-stir-fry/",
+    "v1_recipe_id": "84CFB198-CA0D-4ECC-A4CB-A708FF79A82D",
+    "v2_recipe_id": 1254,
+    "recipe_name": "Teriyaki Chicken Stir Fry",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/bacon-egg-breakfast-muffins/",
+    "v1_recipe_id": "25DD682E-B958-478D-AF8A-C5797BEEC879",
+    "v2_recipe_id": 30,
+    "recipe_name": "Bacon & Egg Breakfast Muffins",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/blueberry-cake-with-lemon-frosting/",
+    "v1_recipe_id": "0E470F6E-0BB6-435F-AEED-254C5272D971",
+    "v2_recipe_id": 100,
+    "recipe_name": "Blueberry Cake with Lemon Frosting",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/one-pot-chicken-alfredo-pasta/",
+    "v1_recipe_id": "EC64C365-A028-40F8-A056-615C0A9A512D",
+    "v2_recipe_id": 188,
+    "recipe_name": "Chicken Alfredo Pasta",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/crispy-corn-fritters/",
+    "v1_recipe_id": "5FFDC9B7-87DA-4830-8874-EA8C793C5D85",
+    "v2_recipe_id": 1137,
+    "recipe_name": "Very Crispy Corn Fritters",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/healthy-cranberry-apricot-bars/",
+    "v1_recipe_id": "40CF7981-D7C7-4D73-B59D-691807DF372E",
+    "v2_recipe_id": 1589,
+    "recipe_name": "Healthy Cranberry Apricot Bars",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/strawberry-crepes/",
+    "v1_recipe_id": "135D33A1-66BA-47E3-8187-A5211FFFBE0E",
+    "v2_recipe_id": 1291,
+    "recipe_name": "Strawberry Crepes",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/homemade-sausage-egg-mcmuffin/",
+    "v1_recipe_id": "7A7F2742-3F4B-427A-9C05-5741CB504C43",
+    "v2_recipe_id": 551,
+    "recipe_name": "Homemade Sausage and Egg McMuffin",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/shepherds-pie/",
+    "v1_recipe_id": "CD92D978-62CA-4B1D-9773-B3F0EDCCB8C2",
+    "v2_recipe_id": 960,
+    "recipe_name": "Shepherd's Pie",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/instant-pot-cauliflower-mac-and-cheese/",
+    "v1_recipe_id": "73173044-24FD-4228-8E50-08D538EBF053",
+    "v2_recipe_id": 1238,
+    "recipe_name": "Instant Pot Cauliflower Mac and Cheese",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/carrot-cake/",
+    "v1_recipe_id": "3F691BDE-FEA8-4CD5-997F-3B2AEAF21C1A",
+    "v2_recipe_id": 152,
+    "recipe_name": "Carrot Cake",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/garlic-butter-shrimp/",
+    "v1_recipe_id": "B36CFCEE-1A1A-452C-B0EF-0E8365113988",
+    "v2_recipe_id": 1772,
+    "recipe_name": "Garlic Butter Shrimp",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/lasagna/",
+    "v1_recipe_id": "104A42D0-BE4A-47DA-88D4-1C012940D4A9",
+    "v2_recipe_id": 625,
+    "recipe_name": "Lasagna!!",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/cheese-bacon-hash-brown-muffins/",
+    "v1_recipe_id": "A79E9BF5-5BCC-482A-8EEC-2EE89C7C1A19",
+    "v2_recipe_id": 171,
+    "recipe_name": "Cheese and Bacon Muffin Tin Hash Browns",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/rosemary-garlic-grilled-lamb-chops/",
+    "v1_recipe_id": "437B3467-BB88-48A6-AFF8-E2D66E598297",
+    "v2_recipe_id": 921,
+    "recipe_name": "Rosemary Garlic Grilled Lamb Chops",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/curried-sausages/",
+    "v1_recipe_id": "09018A97-EF50-4AB5-9A23-C16D77A1A34F",
+    "v2_recipe_id": 385,
+    "recipe_name": "Curried Sausages",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/pancake-recipe/",
+    "v1_recipe_id": "E6E27B6F-E031-466C-8497-77502E21A749",
+    "v2_recipe_id": 785,
+    "recipe_name": "Pancakes - fluffy, quick, no fail",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/sheet-pan-chicken-rainbow-vegetables/",
+    "v1_recipe_id": "B4A114FF-B4EA-461C-8ECC-5AD8E1995768",
+    "v2_recipe_id": 1211,
+    "recipe_name": "Sheet Pan Chicken with Rainbow Vegetables",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/vanilla-cupcakes/",
+    "v1_recipe_id": "BC2CBF54-E267-4980-B9E7-9B98261E0CB2",
+    "v2_recipe_id": 1122,
+    "recipe_name": "Vanilla Cupcakes (that actually stay moist)",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/chicken-bacon-ranch-casserole/",
+    "v1_recipe_id": "D41F55F0-37ED-4A3E-80A5-B8E2BF5A937A",
+    "v2_recipe_id": 1945,
+    "recipe_name": "Chicken Bacon Ranch Casserole",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/italian-tuna-salad/",
+    "v1_recipe_id": "833C97B7-EB42-4537-8438-44EA3F102B9D",
+    "v2_recipe_id": 1332,
+    "recipe_name": "Italian Tuna Salad",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/instant-pot-boiled-eggs/",
+    "v1_recipe_id": "D2393151-F9C7-436C-9690-1FF1589C4985",
+    "v2_recipe_id": 1804,
+    "recipe_name": "Instant Pot Boiled Eggs",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/pineapple-glazed-salmon/",
+    "v1_recipe_id": "352D5FF8-1877-49A0-8DE6-B82049B20363",
+    "v2_recipe_id": 1727,
+    "recipe_name": "Pineapple Glazed Salmon",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/hasselback-potatoes/",
+    "v1_recipe_id": "19D57105-079F-4502-A5D0-EC3D842838AF",
+    "v2_recipe_id": 1876,
+    "recipe_name": "Hasselback Potatoes",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/carrot-cake-cupcakes/",
+    "v1_recipe_id": "10155505-280A-4B36-AEA4-BA28B06EB24C",
+    "v2_recipe_id": 153,
+    "recipe_name": "Carrot Cake Cupcakes",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/chicken-broccoli-stir-fry/",
+    "v1_recipe_id": "33251B43-53A5-42A2-8AB0-3ABF8DED7B74",
+    "v2_recipe_id": 193,
+    "recipe_name": "Chicken Broccoli Stir Fry (extra saucy!)",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/easy-tiramisu/",
+    "v1_recipe_id": "6415D192-7D47-4F43-BBDA-08CFA88F7B9F",
+    "v2_recipe_id": 1099,
+    "recipe_name": "Tiramisu",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/blt-grilled-cheese-recipe/",
+    "v1_recipe_id": "E6E31599-F939-499D-A195-B747EEEF70BA",
+    "v2_recipe_id": 1462,
+    "recipe_name": "BLT",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/fast-french-toast-cinnamon-apples/",
+    "v1_recipe_id": "3A9D07CC-69D2-4D3B-8E4A-3387DF1FD3CB",
+    "v2_recipe_id": 7,
+    "recipe_name": "Apple Cinnamon French Toast",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/strawberry-blueberry-smoothie/",
+    "v1_recipe_id": "52E49EC8-6CDD-4EED-91DA-AF52266B53E2",
+    "v2_recipe_id": 1354,
+    "recipe_name": "Strawberry Blueberry Smoothie",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/broccoli-cauliflower-soup/",
+    "v1_recipe_id": "4C61F6A4-095C-45EC-93AB-EC74B730049F",
+    "v2_recipe_id": 1218,
+    "recipe_name": "Broccoli Cauliflower Soup",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/thai-cashew-chicken-stir-fry/",
+    "v1_recipe_id": "9C99B745-1788-4A40-852C-0E0EBF5F6070",
+    "v2_recipe_id": 1076,
+    "recipe_name": "Thai Cashew Chicken Stir Fry",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/avocado-sauce/",
+    "v1_recipe_id": "B9861DB6-5C2B-41AF-A7C0-F3D0D697D23D",
+    "v2_recipe_id": 27,
+    "recipe_name": "Avocado Sauce",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/healthy-hot-chocolate/",
+    "v1_recipe_id": "57C488C9-5D91-4887-A271-6075628B9AC0",
+    "v2_recipe_id": 1295,
+    "recipe_name": "Healthy Hot Chocolate",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/mashed-sweet-potatoes/",
+    "v1_recipe_id": "8C0C83BA-5E89-433D-AA82-911A6874484A",
+    "v2_recipe_id": 1585,
+    "recipe_name": "Mashed Sweet Potatoes",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/crispy-slow-roasted-pork-belly/",
+    "v1_recipe_id": "ED8FA70C-87B0-4E7F-A9B6-4B8C69F4672D",
+    "v2_recipe_id": 991,
+    "recipe_name": "Slow-Roasted Crispy Pork Belly",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/big-quick-chicken-salad/",
+    "v1_recipe_id": "4BB06302-CEE1-4C2B-ACBF-E489146590A3",
+    "v2_recipe_id": 213,
+    "recipe_name": "Chicken Salad",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/honey-garlic-salmon/",
+    "v1_recipe_id": "89C1FBF9-54C6-4A0F-8429-8AEA68518F63",
+    "v2_recipe_id": 1936,
+    "recipe_name": "Honey Garlic Salmon",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/homemade-reeses-peanut-butter-cups/",
+    "v1_recipe_id": "02C41506-7F58-4295-BC2C-1960547F8610",
+    "v2_recipe_id": 550,
+    "recipe_name": "Homemade Reese's Peanut Butter Cups",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/crispy-parmesan-roasted-brussels-sprouts/",
+    "v1_recipe_id": "0B7EFB36-6D13-42CA-B09D-E70612FA2129",
+    "v2_recipe_id": 135,
+    "recipe_name": "CRISPY Parmesan Roasted Brussels Sprouts",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/rosemary-garlic-rack-of-lamb-recipe/",
+    "v1_recipe_id": "62819380-7412-413F-AF97-28C1E02E1C4B",
+    "v2_recipe_id": 922,
+    "recipe_name": "Rosemary Garlic Marinated Rack of Lamb (Roasted)",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/one-pot-pasta-bolognese/",
+    "v1_recipe_id": "E6EAAA5D-ACED-47B8-8949-81F50645ACE9",
+    "v2_recipe_id": 793,
+    "recipe_name": "Pasta Bolognese",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/slow-cooker-lemon-garlic-roast-chicken/",
+    "v1_recipe_id": "C1DEF335-F5B6-41E0-8056-2870F23DDC20",
+    "v2_recipe_id": 986,
+    "recipe_name": "Slow Cooker Roast Chicken",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/crispy-cheesy-sausage-hash-browns/",
+    "v1_recipe_id": "8D0AF9C1-CC1F-4365-B390-88C5AD208840",
+    "v2_recipe_id": 358,
+    "recipe_name": "Crispy Cheesy Sausage Hash Browns",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/cauliflower-hash-browns/",
+    "v1_recipe_id": "1D503C45-CF4A-4D84-BB27-55510F890988",
+    "v2_recipe_id": 1333,
+    "recipe_name": "Cauliflower Hash Browns",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/easy-yeast-bread-recipe-no-knead/",
+    "v1_recipe_id": "498CCBF8-8138-4274-9656-68522FD45246",
+    "v2_recipe_id": 378,
+    "recipe_name": "Crusty bread",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/chorizo-bites-in-sweet-spicy-sauce/",
+    "v1_recipe_id": "9F05222C-C400-4C7D-A903-EF6A82F68AEF",
+    "v2_recipe_id": 280,
+    "recipe_name": "Chorizo Bites in Sweet & Spicy Sauce",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/samosa-recipe/",
+    "v1_recipe_id": "22CF4B75-24D2-4F7E-919C-D8F244D74A22",
+    "v2_recipe_id": 935,
+    "recipe_name": "Samosa",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/chicken-caesar-salad/",
+    "v1_recipe_id": "2E2195E2-2FD2-47C1-8217-7FBF03EF9871",
+    "v2_recipe_id": 137,
+    "recipe_name": "Caesar Salad",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/self-saucing-butterscotch-pudding/",
+    "v1_recipe_id": "D5C8D79C-50EA-4808-97E2-C168D27E5FAA",
+    "v2_recipe_id": 954,
+    "recipe_name": "Self Saucing Butterscotch Pudding",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/peanut-butter-chocolate-molten-lava-cake/",
+    "v1_recipe_id": "686270F2-5B33-44AB-9C6B-62C4CB1234DB",
+    "v2_recipe_id": 810,
+    "recipe_name": "Peanut Butter Chocolate Molten Lava Cake",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/giant-hash-brown/",
+    "v1_recipe_id": "21449C03-BA45-4D85-9AFB-7A904EEC3D03",
+    "v2_recipe_id": 485,
+    "recipe_name": "Giant Hash Brown",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/meat-pie-recipe/",
+    "v1_recipe_id": "315A577E-BC43-426A-90A7-48EB154BC1C8",
+    "v2_recipe_id": 671,
+    "recipe_name": "Meat Pie!",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/bacon-french-toast-roll-ups/",
+    "v1_recipe_id": "1FCAA468-B7B7-4DD4-A839-102DEE82B6CE",
+    "v2_recipe_id": 32,
+    "recipe_name": "Bacon French Toast Roll Ups",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/chinese-crispy-pork-belly/",
+    "v1_recipe_id": "B767384F-23D4-45C1-A078-774E9B2C20A3",
+    "v2_recipe_id": 251,
+    "recipe_name": "Chinese Crispy Pork Belly",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/moroccan-meatballs/",
+    "v1_recipe_id": "A0DC46C0-F956-479C-80F0-919C1190E4CC",
+    "v2_recipe_id": 1601,
+    "recipe_name": "Moroccan Meatballs",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/lemon-prawn-shrimp-pasta-restaurant-style/",
+    "v1_recipe_id": "9A5483F3-033C-4EFC-A18E-3070FD72700D",
+    "v2_recipe_id": 965,
+    "recipe_name": "Prawn Pasta with Lemon",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/chocolate-self-saucing-pudding/",
+    "v1_recipe_id": "6DC883D4-0DE5-4BBC-B7DF-BE6E2774DFD2",
+    "v2_recipe_id": 275,
+    "recipe_name": "Chocolate Self Saucing Pudding",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/apple-chips/",
+    "v1_recipe_id": "F74F18E9-1DD2-4A1A-8A0F-7D9EC8FEAF4A",
+    "v2_recipe_id": 1476,
+    "recipe_name": "Apple Chips",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/chinese-beef-with-honey-and-black-pepper-sauce/",
+    "v1_recipe_id": "BAFD2E67-DA9E-4C7B-AC26-EB72525AC35A",
+    "v2_recipe_id": 83,
+    "recipe_name": "Beef Stir Fry with Honey Pepper Sauce",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/instant-pot-chicken-and-dumplings/",
+    "v1_recipe_id": "6E0067C3-F80D-46DA-8E0F-DCBF9DCCEDF5",
+    "v2_recipe_id": 1822,
+    "recipe_name": "Instant Pot Chicken and Dumplings",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/crispy-oven-baked-chicken-wings-honey-garlic-sauce/",
+    "v1_recipe_id": "A2920CF1-81FF-4F4D-A83A-57364850F493",
+    "v2_recipe_id": 1108,
+    "recipe_name": "Truly Crispy Oven Baked Chicken Wings",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/chicken-katsu/",
+    "v1_recipe_id": "BD5AFF15-A99D-4259-B4A8-9D54FB151D6B",
+    "v2_recipe_id": 1915,
+    "recipe_name": "Chicken Katsu",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/chicken-tikka-masala/",
+    "v1_recipe_id": "8AF9DD6F-99E0-4EF0-9110-10C7D41BE570",
+    "v2_recipe_id": 1652,
+    "recipe_name": "Chicken Tikka Masala",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/asian-salmon-salad/",
+    "v1_recipe_id": "26C36088-2D3A-4E20-9C4C-1B3BE051DBC2",
+    "v2_recipe_id": 20,
+    "recipe_name": "Asian Salmon Salad",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/anzac-biscuits-golden-oatmeal-cookies/",
+    "v1_recipe_id": "34092E82-AB4C-4AB4-85D0-BC1839798574",
+    "v2_recipe_id": 5,
+    "recipe_name": "Anzac Biscuits",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/mexican-corn-salad/",
+    "v1_recipe_id": "55952792-0A28-441E-BA32-E081F1EFC156",
+    "v2_recipe_id": 682,
+    "recipe_name": "Mexican Corn Salad",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/bagel-egg-in-a-hole/",
+    "v1_recipe_id": "DB2B3E06-E537-427A-8290-11F5F2D8AD2C",
+    "v2_recipe_id": 1288,
+    "recipe_name": "Bagel Egg in a Hole with Smashed Avocado",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/vegan-burger-recipe/",
+    "v1_recipe_id": "3DDC15DA-012E-486F-90CD-2C9FB49C6D71",
+    "v2_recipe_id": 1961,
+    "recipe_name": "Vegan Burger",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.recipetineats.com/easy-soft-flatbread-yeast/",
+    "v1_recipe_id": "43D9E683-5D63-4D36-A265-59B470147B27",
+    "v2_recipe_id": 999,
+    "recipe_name": "Soft Flatbread",
+    "recipe_author": "Recipe Tin Eats",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/chicken-bacon-pasta/",
+    "v1_recipe_id": "1342EDB3-22A8-4F1E-85DB-181D5290E380",
+    "v2_recipe_id": 1752,
+    "recipe_name": "Chicken Bacon Ranch Pasta",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  },
+  {
+    "recipe_url": "https://www.wellplated.com/salmon-quinoa-bowl/",
+    "v1_recipe_id": "B23EFF3A-B738-43AF-86A6-C5582FA03B09",
+    "v2_recipe_id": 1499,
+    "recipe_name": "Teriyaki Salmon Bowl",
+    "recipe_author": "Well Plated",
+    "are_identical": true
+  }
+]

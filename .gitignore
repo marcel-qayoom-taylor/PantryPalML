@@ -56,3 +56,9 @@ ml_etl/output/*.csv
 # io
 recipe_recommender/input/
 recipe_recommender/output/*
+
+# not the following files
+!recipe_recommender/output/enhanced_recipe_features_from_db.csv
+!recipe_recommender/output/real_recipe_ingredients_from_db.csv
+!recipe_recommender/output/real_ingredients_from_db.csv
+!recipe_recommender/output/recipe_id_mapping_v1_v2.json
